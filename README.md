@@ -1,5 +1,8 @@
 # VIRELLE — The Intelligent Hospitality Organisation
 
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/Rashmi-Belimagga-Manjunath/VIRELLE)
+[![Live Site](https://img.shields.io/badge/Live%20Site-GitHub%20Pages-gold)](https://rashmi-belimagga-manjunath.github.io/VIRELLE/)
+
 A pitch-ready AI organisation for **The Virelle Dublin**, a fictional five-star
 boutique hotel. Five specialised AI agents — Researcher → Designer → Maker →
 Communicator → Manager — run a complete business operation from **live data to a
@@ -11,6 +14,26 @@ pipeline workspace (**VIRELLE Operations**), a live data and evidence board
 (**VIRELLE Intelligence**), a bookable product (**VIRELLE Experiences**), the
 go-to-market (**VIRELLE Launch**), the signed business decision (**VIRELLE
 Executive**) and the team itself (**The VIRELLE Team**).
+
+## Run the full experience in one click (recommended)
+
+The complete application — frontend **and** backend — runs from this repository
+in a **GitHub Codespace**, so there is no localhost and no extra setup:
+
+1. Click the **Open in GitHub Codespaces** badge above (or the green
+   **Code → Codespaces → Create codespace on main** button).
+2. The workspace boots automatically (installs deps, builds the site, starts the
+   server) — this takes 1–3 minutes the first time.
+3. Open the **Ports** panel, click the globe icon on port **8000** (public URL),
+   and the entire app is live: chat, live data, operations, booking and music.
+
+The frontend and API share one origin, so everything works out of the box. The
+`OPENAI_API_KEY` is injected as a private **Codespaces secret** in this repo —
+it is never committed.
+
+> The static [GitHub Pages site](https://rashmi-belimagga-manjunath.github.io/VIRELLE/)
+> is a permanently-up design showcase. GitHub Pages can only serve static files,
+> so the full experience (chat, live data, booking) runs in the Codespace above.
 
 ## The five agents
 

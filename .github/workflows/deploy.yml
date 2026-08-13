@@ -30,6 +30,8 @@ jobs:
       - name: Build static site
         working-directory: frontend
         run: npm run build
+        env:
+          VITE_API_BASE: ${{ vars.VITE_API_BASE }}
       - name: Configure Pages
         uses: actions/configure-pages@v5
       - name: Upload Pages artifact
