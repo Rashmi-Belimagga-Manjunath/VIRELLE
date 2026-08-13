@@ -1,0 +1,297 @@
+"""Live external data clients.
+
+Everything here is fetched over the network at the moment of use - nothing is
+cached in code, hardcoded or copy-pasted. Every client returns structured data
+plus the exact time it was retrieved and the source URL, so the UI can show
+what was queried, when, and from where.
+"""
+import csv
+import datetime as dt
+import io
+import json
+import math
+import ssl
+import urllib.request
+
+import certifi
+
+import config
+
+TIMEOUT = 25
+UA = "Virelle-Demo/1.0 (educational hospitality research)"
+
+_SSL_CTX = ssl.create_default_context(cafile=certifi.where())
+
+
+def _http_json(url: str) -> tuple[dict, str]:
+    req = urllib.request.Request(url, headers={"Accept": "application/json", "User-Agent": UA})
+    with urllib.request.urlopen(req, timeout=TIMEOUT, context=_SSL_CTX) as resp:
+        body = resp.read().decode("utf-8")
+        return json.loads(body), resp.geturl()
+
+
+def _http_bytes(url: str) -> bytes:
+    req = urllib.request.Request(url, headers={"User-Agent": UA})
+    with urllib.request.urlopen(req, timeout=TIMEOUT, context=_SSL_CTX) as resp:
+        return resp.read()
+
+
+# --------------------------------------------------------------------------
+# Events - Fáilte Ireland Open Data (official Irish tourism events feed)
+# --------------------------------------------------------------------------
+
+def _parse_fi_date(value: str):
+    value = (value or "").strip()
+    for fmt in ("%d/%m/%Y", "%Y-%m-%d", "%d-%m-%Y"):
+        try:
+            return dt.datetime.strptime(value, fmt).date()
+        except ValueError:
+            continue
+    return None
+
+
+def fetch_events(days_ahead: int = 14, county: str | None = "Dublin") -> dict:
+    """Fetch live events from the Fáilte Ireland open data events API."""
+    fetched_at = dt.datetime.now().isoformat(timespec="seconds")
+    status = "connected"
+    error = None
+    events = []
+    try:
+        raw = _http_bytes(config.EVENTS_URL)
+        text = raw.decode("utf-8-sig")
+        today = dt.date.today()
+        horizon = today + dt.timedelta(days=days_ahead)
+
+        for row in csv.DictReader(io.StringIO(text)):
+            start = _parse_fi_date(row.get("Start Date", ""))
+            if not start or start < today - dt.timedelta(days=1) or start > horizon:
+                continue
+            row_county = (row.get("County") or "").strip()
+            if county and row_county.lower() != county.lower():
+                continue
+            events.append({
+                "name": (row.get("Name") or "").strip(),
+                "event_type": (row.get("Event Type") or "").strip(),
+                "description": ((row.get("Description") or "").strip())[:600],
+                "venue": (row.get("Venue Name") or "").strip(),
+                "address": (row.get("Address") or "").strip(),
+                "county": row_county,
+                "start_date": start.isoformat(),
+                "end_date": (_parse_fi_date(row.get("End Date", "")) or start).isoformat(),
+                "start_time": (row.get("Start Time") or "").strip(),
+                "free": (row.get("Is Free To Visit") or "").strip().lower() == "yes",
+                "price": (row.get("Price") or "").strip(),
+                "lat": _to_float(row.get("Latitude")),
+                "lon": _to_float(row.get("Longitude")),
+                "image": (row.get("Image") or "").strip(),
+                "booking_url": (row.get("Booking URL") or "").strip(),
+            })
+        events.sort(key=lambda e: e["start_date"])
+        if not events:
+            status = "connected"
+            error = "No events found for the requested window."
+    except Exception as exc:  # noqa: BLE001
+        status = "error"
+        error = f"{type(exc).__name__}: {exc}"
+
+    return {
+        "source": config.EVENTS_SOURCE_NAME,
+        "source_url": config.EVENTS_URL,
+        "status": status,
+        "error": error,
+        "fetched_at": fetched_at,
+        "count": len(events),
+        "events": events[:200],
+    }
+
+
+def _to_float(value):
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+# --------------------------------------------------------------------------
+# Weather - Open-Meteo (keyless, live forecast)
+# --------------------------------------------------------------------------
+
+WMO_CODES = {
+    0: ("Clear sky", "clear"), 1: ("Mainly clear", "clear"), 2: ("Partly cloudy", "partly"),
+    3: ("Overcast", "cloudy"), 45: ("Fog", "fog"), 48: ("Depositing rime fog", "fog"),
+    51: ("Light drizzle", "drizzle"), 53: ("Moderate drizzle", "drizzle"),
+    55: ("Dense drizzle", "drizzle"), 61: ("Slight rain", "rain"), 63: ("Moderate rain", "rain"),
+    65: ("Heavy rain", "rain"), 66: ("Freezing rain", "rain"), 67: ("Freezing rain", "rain"),
+    71: ("Slight snow", "snow"), 73: ("Moderate snow", "snow"), 75: ("Heavy snow", "snow"),
+    80: ("Light showers", "rain"), 81: ("Moderate showers", "rain"), 82: ("Violent showers", "rain"),
+    95: ("Thunderstorm", "storm"), 96: ("Thunderstorm with hail", "storm"),
+    99: ("Thunderstorm with hail", "storm"),
+}
+
+
+def fetch_weather(lat: float = None, lon: float = None, days: int = 7) -> dict:
+    lat = lat or config.HOTEL_LAT
+    lon = lon or config.HOTEL_LON
+    fetched_at = dt.datetime.now().isoformat(timespec="seconds")
+    url = (
+        f"{config.WEATHER_URL}?latitude={lat}&longitude={lon}"
+        f"&current=temperature_2m,weather_code,wind_speed_10m,relative_humidity_2m"
+        f"&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,"
+        f"weather_code,wind_speed_10m_max&timezone=Europe%2FDublin&forecast_days={days}"
+    )
+    status = "connected"
+    error = None
+    payload = None
+    try:
+        payload, _ = _http_json(url)
+    except Exception as exc:  # noqa: BLE001
+        status = "error"
+        error = f"{type(exc).__name__}: {exc}"
+
+    summary = None
+    if payload:
+        daily = payload.get("daily", {})
+        days_out = []
+        for i, day in enumerate(daily.get("time", [])[:days]):
+            code = daily.get("weather_code", [0] * days)[i]
+            label, kind = WMO_CODES.get(code, ("Unknown", "unknown"))
+            days_out.append({
+                "date": day,
+                "max_c": daily.get("temperature_2m_max", [None] * days)[i],
+                "min_c": daily.get("temperature_2m_min", [None] * days)[i],
+                "precip_prob": daily.get("precipitation_probability_max", [None] * days)[i],
+                "wind_max_kmh": daily.get("wind_speed_10m_max", [None] * days)[i],
+                "condition": label,
+                "condition_kind": kind,
+            })
+        cur = payload.get("current", {})
+        code = cur.get("weather_code")
+        label, kind = WMO_CODES.get(code, ("Unknown", "unknown"))
+        summary = {
+            "as_of": cur.get("time"),
+            "temperature_c": cur.get("temperature_2m"),
+            "condition": label,
+            "condition_kind": kind,
+            "wind_kmh": cur.get("wind_speed_10m"),
+            "humidity": cur.get("relative_humidity_2m"),
+            "forecast": days_out,
+        }
+
+    return {
+        "source": config.WEATHER_SOURCE_NAME,
+        "source_url": config.WEATHER_URL,
+        "status": status,
+        "error": error,
+        "fetched_at": fetched_at,
+        "summary": summary,
+    }
+
+
+# --------------------------------------------------------------------------
+# Destination interest - Wikipedia pageviews for Dublin (live tourism signal)
+# --------------------------------------------------------------------------
+
+def fetch_destination_interest() -> dict:
+    fetched_at = dt.datetime.now().isoformat(timespec="seconds")
+    status = "connected"
+    error = None
+    result = None
+    try:
+        today = dt.date.today()
+        start = today - dt.timedelta(days=29)
+        url = (
+            "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/"
+            f"en.wikipedia/all-access/user/Dublin/daily/"
+            f"{start:%Y%m%d}/{today:%Y%m%d}"
+        )
+        payload, _ = _http_json(url)
+        items = payload.get("items", [])
+        views = [int(i["views"]) for i in items]
+        if views:
+            recent = sum(views[-7:])
+            previous = sum(views[-14:-7])
+            change = ((recent - previous) / previous * 100) if previous else 0.0
+            result = {
+                "article": "Dublin",
+                "latest_daily_views": views[-1],
+                "total_views_30d": sum(views),
+                "days_measured": len(views),
+                "trend_pct": round(change, 1),
+                "trend": "rising" if change > 5 else ("declining" if change < -5 else "steady"),
+                "as_of_day": items[-1]["timestamp"][:8],
+            }
+        else:
+            status = "connected"
+            error = "No pageview data returned for Dublin."
+    except Exception as exc:  # noqa: BLE001
+        status = "error"
+        error = f"{type(exc).__name__}: {exc}"
+
+    return {
+        "source": config.TOURISM_SOURCE_NAME,
+        "source_url": "https://wikimedia.org/api/rest_v1/metrics/pageviews",
+        "status": status,
+        "error": error,
+        "fetched_at": fetched_at,
+        "summary": result,
+    }
+
+
+# --------------------------------------------------------------------------
+# Combined live snapshot used by the Researcher
+# --------------------------------------------------------------------------
+
+def fetch_live_snapshot() -> dict:
+    events = fetch_events()
+    weather = fetch_weather()
+    destination = fetch_destination_interest()
+    return {
+        "events": events,
+        "weather": weather,
+        "destination": destination,
+        "snapshot_at": dt.datetime.now().isoformat(timespec="seconds"),
+    }
+
+
+def summarize_events(events: dict, top: int = 12) -> str:
+    """Human-readable summary of the live events payload for agents."""
+    if events.get("status") != "connected" or not events.get("events"):
+        err = events.get("error") or "no events in window"
+        return f"Live events unavailable ({err})."
+    today = dt.date.today().isoformat()
+    lines = [f"Live events (source: {events['source']}, fetched {events['fetched_at']}):"]
+    for e in events["events"][:top]:
+        price = "Free" if e["free"] else (e["price"] or "n/a")
+        lines.append(
+            f"- {e['start_date']} | {e['name']} | {e['venue']}, {e['address']} | "
+            f"{e['event_type']} | price: {price}"
+        )
+    return "\n".join(lines)
+
+
+def summarize_weather(weather: dict) -> str:
+    s = weather.get("summary")
+    if weather.get("status") != "connected" or not s:
+        return f"Live weather unavailable ({weather.get('error')})."
+    lines = [
+        f"Live weather (source: {weather['source']}, fetched {weather['fetched_at']}): "
+        f"Now: {s['temperature_c']}C, {s['condition']}, wind {s['wind_kmh']} km/h."
+    ]
+    for d in s["forecast"][:5]:
+        lines.append(
+            f"- {d['date']}: {d['condition']}, {d['min_c']}C to {d['max_c']}C, "
+            f"precip {d['precip_prob']}%, wind {d['wind_max_kmh']} km/h"
+        )
+    return "\n".join(lines)
+
+
+def summarize_destination(dest: dict) -> str:
+    s = dest.get("summary")
+    if dest.get("status") != "connected" or not s:
+        return f"Live destination data unavailable ({dest.get('error')})."
+    return (
+        f"Live destination interest (source: {dest['source']}, fetched {dest['fetched_at']}): "
+        f"Dublin pageviews are {s['trend']} ({s['trend_pct']:+}% week-on-week), "
+        f"{s['total_views_30d']:,} views across {s['days_measured']} days, "
+        f"latest day {s['latest_daily_views']:,}."
+    )
