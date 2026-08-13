@@ -10,9 +10,16 @@ import {
   TrendingUp,
   Gauge,
   Target,
+  RefreshCw,
+  Droplets,
+  Wind,
+  Calendar,
+  MapPin,
 } from "lucide-react";
-import { connections as fetchConnections } from "../api.js";
+import { connectionsLive, livePayload } from "../api.js";
 import { useOperation } from "../hooks/useOperation.js";
+import CinematicImage from "../components/CinematicImage.jsx";
+import { WEATHER_IMAGES, GALLERY } from "../components/Images.jsx";
 
 const CONN_META = {
   "Fáilte Ireland Events API": { icon: Cloud, note: "Live Irish tourism events feed" },
@@ -25,18 +32,51 @@ const CONN_META = {
 export default function Intelligence({ opId, navigate }) {
   const { op } = useOperation(opId);
   const [conns, setConns] = useState([]);
+  const [live, setLive] = useState(null);
+  const [probing, setProbing] = useState(false);
 
   useEffect(() => {
-    fetchConnections().then((r) => setConns(r.connections)).catch(() => {});
-    const t = setInterval(
-      () => fetchConnections().then((r) => setConns(r.connections)).catch(() => {}),
-      6000
-    );
-    return () => clearInterval(t);
+    let mounted = true;
+    const probe = () =>
+      connectionsLive()
+        .then((r) => mounted && setConns(r.connections))
+        .catch(() => {});
+    probe();
+    const t = setInterval(probe, 20000);
+    return () => {
+      mounted = false;
+      clearInterval(t);
+    };
   }, []);
+
+  useEffect(() => {
+    let mounted = true;
+    livePayload().then((r) => mounted && setLive(r)).catch(() => {});
+    const t = setInterval(
+      () => livePayload().then((r) => mounted && setLive(r)).catch(() => {}),
+      60000
+    );
+    return () => {
+      mounted = false;
+      clearInterval(t);
+    };
+  }, []);
+
+  const recheck = () => {
+    setProbing(true);
+    connectionsLive()
+      .then((r) => setConns(r.connections))
+      .finally(() => setProbing(false));
+  };
 
   const brief =
     op.agents?.find((a) => a.id === "researcher")?.output?.opportunity_brief || null;
+
+  const weather = live?.weather?.summary || null;
+  const weatherKind = weather?.condition_kind || "clear";
+  const events = live?.events?.events || [];
+  const dest = live?.destination?.summary || null;
+  const liveAt = live?.fetched_at || null;
 
   return (
     <div className="relative z-10 mx-auto max-w-7xl px-6 py-12">
@@ -44,21 +84,157 @@ export default function Intelligence({ opId, navigate }) {
         <p className="font-mono text-[11px] tracking-widest2 text-gold-500/80">VIRELLE INTELLIGENCE</p>
         <h1 className="mt-2 font-serif text-4xl text-cream md:text-5xl">Live data, evidence, research</h1>
         <p className="mx-auto mt-3 max-w-xl text-sm text-cream/55">
-          Every source below is queried at the moment of use. Nothing is cached,
+          Every source below is queried at the moment of use — nothing is cached,
           hardcoded or copy-pasted.
         </p>
       </div>
 
-      {/* live connections */}
-      <div className="mt-12 grid gap-4 md:grid-cols-3">
+      {/* ===== LIVE NOW — real-time imagery banner ===== */}
+      <div className="mt-10 grid gap-5 lg:grid-cols-3">
+        {/* weather photo banner */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="lg:col-span-2"
+        >
+          <div className="relative overflow-hidden rounded-3xl border border-gold-500/15">
+            <CinematicImage
+              src={WEATHER_IMAGES[weatherKind] || WEATHER_IMAGES.clear}
+              alt={weather?.condition || "Dublin weather"}
+              className="h-72 md:h-80"
+              speed={0.7}
+            >
+              <div className="absolute inset-0 bg-gradient-to-t from-ink-950/90 via-ink-950/25 to-transparent" />
+              <div className="absolute bottom-0 left-0 p-7">
+                <p className="flex items-center gap-2 font-mono text-[10px] tracking-widest text-gold-300">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 pulse-dot" />
+                  LIVE NOW · OPEN-METEO · DUBLIN
+                </p>
+                {weather ? (
+                  <>
+                    <div className="mt-2 flex items-end gap-3">
+                      <span className="font-serif text-7xl leading-none text-cream">
+                        {Math.round(weather.temperature_c)}°
+                      </span>
+                      <span className="pb-1 text-lg text-cream/70">{weather.condition}</span>
+                    </div>
+                    <div className="mt-3 flex flex-wrap items-center gap-4">
+                      <span className="flex items-center gap-1.5 text-[12px] text-cream/60">
+                        <Wind size={13} className="text-gold-400" /> {weather.wind_kmh} km/h wind
+                      </span>
+                      <span className="flex items-center gap-1.5 text-[12px] text-cream/60">
+                        <Droplets size={13} className="text-gold-400" /> {weather.humidity}% humidity
+                      </span>
+                      <span className="flex items-center gap-1.5 text-[12px] text-cream/60">
+                        <Calendar size={13} className="text-gold-400" />
+                        {Math.round(weather.forecast?.[0]?.precip_prob ?? 0)}% rain tomorrow
+                      </span>
+                    </div>
+                  </>
+                ) : (
+                  <p className="mt-2 text-sm text-cream/50">Weather feed unreachable right now.</p>
+                )}
+              </div>
+            </CinematicImage>
+          </div>
+        </motion.div>
+
+        {/* destination + next event column */}
+        <div className="grid gap-5">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="relative overflow-hidden rounded-3xl border border-gold-500/15"
+          >
+            <CinematicImage
+              src={GALLERY.dublinNight.src}
+              alt="Dublin — live destination interest"
+              className="h-40"
+              speed={0.8}
+            >
+              <div className="absolute inset-0 bg-gradient-to-t from-ink-950/90 via-ink-950/30 to-transparent" />
+              <div className="absolute bottom-0 left-0 p-5">
+                <p className="font-mono text-[10px] tracking-widest text-gold-300">DESTINATION SIGNALS</p>
+                {dest ? (
+                  <p className="mt-1 font-serif text-lg text-cream">
+                    {dest.trend === "rising" ? "Dublin interest is rising" : `Dublin interest is ${dest.trend}`}
+                    <span className="ml-2 font-mono text-sm text-emerald-400">{dest.trend_pct > 0 ? "+" : ""}{dest.trend_pct}% WoW</span>
+                  </p>
+                ) : (
+                  <p className="mt-1 text-sm text-cream/50">No pageview data.</p>
+                )}
+              </div>
+            </CinematicImage>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.18 }}
+            className="glass relative overflow-hidden rounded-3xl p-5"
+          >
+            <div className="flex items-center justify-between">
+              <p className="font-mono text-[10px] tracking-widest text-gold-300">
+                NEXT LIVE EVENT
+              </p>
+              <span className="font-mono text-[9px] text-cream/35">
+                {events.length ? `${events.length} in window` : "…"}
+              </span>
+            </div>
+            {events.length ? (
+              <div className="mt-3 flex gap-4">
+                <CinematicImage
+                  src={events[0].image || GALLERY.event.src}
+                  alt={events[0].name}
+                  className="h-20 w-20 shrink-0 rounded-xl"
+                  speed={0.4}
+                />
+                <div className="min-w-0">
+                  <p className="truncate font-serif text-base text-cream">{events[0].name}</p>
+                  <p className="mt-1 flex items-center gap-1 text-[11px] text-cream/50">
+                    <MapPin size={11} className="text-gold-400" /> {events[0].venue || "Dublin"}
+                  </p>
+                  <p className="mt-0.5 font-mono text-[10px] text-gold-400/80">
+                    {events[0].start_date}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <p className="mt-3 text-sm text-cream/50">No Dublin events in the next two weeks.</p>
+            )}
+          </motion.div>
+        </div>
+      </div>
+
+      {/* ===== LIVE CONNECTIONS ===== */}
+      <div className="mt-12 flex items-center justify-between">
+        <h2 className="font-serif text-2xl text-cream">Live connections</h2>
+        <button
+          onClick={recheck}
+          disabled={probing}
+          className="flex items-center gap-2 rounded-full border border-gold-500/25 px-4 py-2 font-mono text-[10px] tracking-widest text-gold-300 transition-colors hover:bg-gold-500/10 disabled:opacity-50"
+        >
+          <RefreshCw size={12} className={probing ? "animate-spin" : ""} />
+          RECHECK NOW
+        </button>
+      </div>
+      {liveAt && (
+        <p className="mt-1 font-mono text-[10px] tracking-wider text-cream/35">
+          LIVE SNAPSHOT · {new Date(liveAt).toLocaleTimeString("en-IE")}
+        </p>
+      )}
+
+      <div className="mt-4 grid gap-4 md:grid-cols-3">
         {(conns.length
           ? conns
-          : Object.keys(CONN_META).map((n) => ({ name: n, status: "idle" }))
+          : Object.keys(CONN_META).map((n) => ({ name: n, status: "checking" }))
         ).map((c, i) => {
           const meta = CONN_META[c.name] || { icon: Database, note: "" };
           const Icon = meta.icon;
           const ok = c.status === "connected";
           const err = c.status === "error";
+          const statusLabel = ok ? "CONNECTED" : err ? "ERROR" : c.status === "checking" ? "CHECKING" : "IDLE";
           return (
             <motion.div
               key={c.name + i}
@@ -75,20 +251,68 @@ export default function Intelligence({ opId, navigate }) {
                   }`}
                 >
                   <span className={`h-1.5 w-1.5 rounded-full ${ok ? "bg-emerald-400 pulse-dot" : err ? "bg-rose-400" : "bg-cream/30"}`} />
-                  {ok ? "CONNECTED" : err ? "ERROR" : "IDLE"}
+                  {statusLabel}
                 </span>
               </div>
               <p className="mt-3 text-sm font-medium text-cream">{c.name}</p>
               <p className="mt-0.5 text-[11px] text-cream/40">{meta.note}</p>
+              {c.detail && (
+                <p className="mt-2.5 font-mono text-[10px] leading-relaxed text-cream/60">
+                  <span className="text-gold-400/80">› </span>
+                  {c.detail}
+                </p>
+              )}
               {c.fetched_at && (
-                <p className="mt-3 font-mono text-[9px] tracking-wider text-gold-500/70">
-                  LAST QUERIED · {new Date(c.fetched_at).toLocaleTimeString("en-IE")}
+                <p className="mt-2 font-mono text-[9px] tracking-wider text-gold-500/70">
+                  QUERIED · {new Date(c.fetched_at).toLocaleTimeString("en-IE")}
                 </p>
               )}
             </motion.div>
           );
         })}
       </div>
+
+      {/* ===== LIVE EVENTS — real photos from the feed ===== */}
+      {events.length > 0 && (
+        <div className="mt-12">
+          <h2 className="flex items-center gap-2 font-serif text-2xl text-cream">
+            <Cloud size={18} className="text-gold-400" /> Live Dublin events
+          </h2>
+          <p className="mt-1 text-[12px] text-cream/45">
+            Real listings pulled from the Fáilte Ireland feed, imagery included.
+          </p>
+          <div className="mt-5 flex gap-4 overflow-x-auto pb-3">
+            {events.slice(0, 8).map((e, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: i * 0.05 }}
+                className="w-64 shrink-0 overflow-hidden rounded-2xl border border-cream/8 bg-ink-900/50"
+              >
+                <CinematicImage
+                  src={e.image || GALLERY.event.src}
+                  alt={e.name}
+                  className="h-32"
+                  speed={0.5}
+                />
+                <div className="p-4">
+                  <p className="font-mono text-[9px] tracking-widest text-gold-500/80">
+                    {e.start_date}
+                  </p>
+                  <p className="mt-1 truncate font-serif text-base text-cream">{e.name}</p>
+                  <p className="mt-1 flex items-center gap-1 text-[10px] text-cream/45">
+                    <MapPin size={10} className="text-gold-400" /> {e.venue || e.county}
+                  </p>
+                  {e.price && !e.free && (
+                    <p className="mt-1.5 font-mono text-[10px] text-cream/60">{e.price}</p>
+                  )}
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* research brief */}
       <div className="mt-12">

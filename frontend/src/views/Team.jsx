@@ -2,6 +2,8 @@ import React from "react";
 import { motion } from "framer-motion";
 import { Quote, ArrowRight } from "lucide-react";
 import { TEAM, STAGES } from "../constants.jsx";
+import CinematicImage from "../components/CinematicImage.jsx";
+import { PORTRAITS } from "../components/Images.jsx";
 
 export default function Team({ navigate }) {
   return (
@@ -30,20 +32,25 @@ export default function Team({ navigate }) {
               className="pointer-events-none absolute -right-20 -top-20 h-56 w-56 rounded-full opacity-[0.07] blur-2xl transition-opacity duration-500 group-hover:opacity-25"
               style={{ background: a.color }}
             />
-            <div className="flex items-start justify-between">
-              <span
-                className="font-serif text-6xl leading-none"
-                style={{ color: `${a.color}66` }}
-              >
-                {a.number}
-              </span>
-              <span
-                className="rounded-full border px-3 py-1 font-mono text-[9px] tracking-widest"
-                style={{ borderColor: `${a.color}44`, color: a.color }}
+            <CinematicImage
+              src={PORTRAITS[i % PORTRAITS.length]?.src}
+              alt={PORTRAITS[i % PORTRAITS.length]?.alt || a.name}
+              className="h-44 w-full rounded-2xl"
+              speed={0.5}
+            >
+              <div
+                className="absolute inset-0 bg-gradient-to-t opacity-20 transition-opacity duration-500 group-hover:opacity-0"
+                style={{ background: a.color }}
+              />
+              <div className="absolute left-4 top-3 rounded-full border px-3 py-1 font-mono text-[9px] tracking-widest backdrop-blur"
+                style={{ borderColor: `${a.color}55`, color: "#fdf6e9", background: "rgba(10,10,14,0.45)" }}
               >
                 {a.archetype.toUpperCase()}
-              </span>
-            </div>
+              </div>
+              <div className="absolute bottom-3 left-4 font-serif text-3xl text-cream/90 drop-shadow">
+                {a.number}
+              </div>
+            </CinematicImage>
 
             <div className="mt-5 flex items-center gap-3">
               <span

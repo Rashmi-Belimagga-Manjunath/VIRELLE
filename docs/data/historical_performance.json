@@ -1,0 +1,178 @@
+[
+  {
+    "id": 1,
+    "period": "2026-04-24",
+    "occupancy": 0.613,
+    "adr": 320.0,
+    "revpar": 196.16,
+    "revenue": 115342.0,
+    "couple_demand_index": 0.83,
+    "business_demand_index": 0.57,
+    "leisure_demand_index": 0.43
+  },
+  {
+    "id": 2,
+    "period": "2026-05-01",
+    "occupancy": 0.643,
+    "adr": 328.0,
+    "revpar": 210.9,
+    "revenue": 124009.0,
+    "couple_demand_index": 0.84,
+    "business_demand_index": 0.55,
+    "leisure_demand_index": 0.56
+  },
+  {
+    "id": 3,
+    "period": "2026-05-08",
+    "occupancy": 0.785,
+    "adr": 341.0,
+    "revpar": 267.69,
+    "revenue": 157402.0,
+    "couple_demand_index": 0.89,
+    "business_demand_index": 0.5,
+    "leisure_demand_index": 0.47
+  },
+  {
+    "id": 4,
+    "period": "2026-05-15",
+    "occupancy": 0.752,
+    "adr": 289.0,
+    "revpar": 217.33,
+    "revenue": 127790.0,
+    "couple_demand_index": 0.9,
+    "business_demand_index": 0.46,
+    "leisure_demand_index": 0.64
+  },
+  {
+    "id": 5,
+    "period": "2026-05-22",
+    "occupancy": 0.772,
+    "adr": 334.0,
+    "revpar": 257.85,
+    "revenue": 151616.0,
+    "couple_demand_index": 0.75,
+    "business_demand_index": 0.41,
+    "leisure_demand_index": 0.69
+  },
+  {
+    "id": 6,
+    "period": "2026-05-29",
+    "occupancy": 0.84,
+    "adr": 344.0,
+    "revpar": 288.96,
+    "revenue": 169908.0,
+    "couple_demand_index": 0.95,
+    "business_demand_index": 0.48,
+    "leisure_demand_index": 0.42
+  },
+  {
+    "id": 7,
+    "period": "2026-06-05",
+    "occupancy": 0.675,
+    "adr": 325.0,
+    "revpar": 219.38,
+    "revenue": 128995.0,
+    "couple_demand_index": 0.77,
+    "business_demand_index": 0.46,
+    "leisure_demand_index": 0.66
+  },
+  {
+    "id": 8,
+    "period": "2026-06-12",
+    "occupancy": 0.777,
+    "adr": 326.0,
+    "revpar": 253.3,
+    "revenue": 148940.0,
+    "couple_demand_index": 0.71,
+    "business_demand_index": 0.53,
+    "leisure_demand_index": 0.51
+  },
+  {
+    "id": 9,
+    "period": "2026-06-19",
+    "occupancy": 0.698,
+    "adr": 312.0,
+    "revpar": 217.78,
+    "revenue": 128055.0,
+    "couple_demand_index": 0.85,
+    "business_demand_index": 0.47,
+    "leisure_demand_index": 0.43
+  },
+  {
+    "id": 10,
+    "period": "2026-06-26",
+    "occupancy": 0.722,
+    "adr": 340.0,
+    "revpar": 245.48,
+    "revenue": 144342.0,
+    "couple_demand_index": 0.85,
+    "business_demand_index": 0.47,
+    "leisure_demand_index": 0.68
+  },
+  {
+    "id": 11,
+    "period": "2026-07-03",
+    "occupancy": 0.652,
+    "adr": 314.0,
+    "revpar": 204.73,
+    "revenue": 120381.0,
+    "couple_demand_index": 0.93,
+    "business_demand_index": 0.47,
+    "leisure_demand_index": 0.56
+  },
+  {
+    "id": 12,
+    "period": "2026-07-10",
+    "occupancy": 0.587,
+    "adr": 298.0,
+    "revpar": 174.93,
+    "revenue": 102859.0,
+    "couple_demand_index": 0.73,
+    "business_demand_index": 0.36,
+    "leisure_demand_index": 0.61
+  },
+  {
+    "id": 13,
+    "period": "2026-07-17",
+    "occupancy": 0.828,
+    "adr": 288.0,
+    "revpar": 238.46,
+    "revenue": 140214.0,
+    "couple_demand_index": 0.86,
+    "business_demand_index": 0.47,
+    "leisure_demand_index": 0.54
+  },
+  {
+    "id": 14,
+    "period": "2026-07-24",
+    "occupancy": 0.644,
+    "adr": 351.0,
+    "revpar": 226.04,
+    "revenue": 132912.0,
+    "couple_demand_index": 0.86,
+    "business_demand_index": 0.46,
+    "leisure_demand_index": 0.54
+  },
+  {
+    "id": 15,
+    "period": "2026-07-31",
+    "occupancy": 0.84,
+    "adr": 359.0,
+    "revpar": 301.56,
+    "revenue": 177317.0,
+    "couple_demand_index": 0.84,
+    "business_demand_index": 0.49,
+    "leisure_demand_index": 0.6
+  },
+  {
+    "id": 16,
+    "period": "2026-08-07",
+    "occupancy": 0.666,
+    "adr": 344.0,
+    "revpar": 229.1,
+    "revenue": 134711.0,
+    "couple_demand_index": 0.83,
+    "business_demand_index": 0.47,
+    "leisure_demand_index": 0.67
+  }
+]

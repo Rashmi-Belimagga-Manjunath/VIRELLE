@@ -10,6 +10,8 @@ import Experiences from "./views/Experiences.jsx";
 import Launch from "./views/Launch.jsx";
 import Executive from "./views/Executive.jsx";
 import Team from "./views/Team.jsx";
+import ChatWidget from "./components/ChatWidget.jsx";
+import MusicPlayer from "./components/MusicPlayer.jsx";
 
 function readHash() {
   const h = window.location.hash.replace(/^#\/?/, "");
@@ -71,6 +73,8 @@ export default function App() {
         </motion.main>
       </AnimatePresence>
       <Footer navigate={navigate} />
+      <ChatWidget onOperate={onOperationStarted} />
+      <MusicPlayer />
     </div>
   );
 }

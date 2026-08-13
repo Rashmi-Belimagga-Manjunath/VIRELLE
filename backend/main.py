@@ -17,6 +17,7 @@ from pydantic import BaseModel
 import agents
 import chat
 import config
+import live_data
 import llm
 import pipeline
 from mcp_client import default_mcp_client
@@ -37,6 +38,7 @@ async def lifespan(app: FastAPI):
                              detail=mcp.error)
     pipeline.CONNECTIONS.set("Hotel Database (SQLite)", "connected")
     app.state.mcp = mcp
+    asyncio.create_task(pipeline.probe_connections())
     yield
     await mcp.close()
 
@@ -88,6 +90,25 @@ async def connections():
             for n in pipeline.LIVE_CONNECTION_NAMES
         ]
     return {"connections": conns}
+
+
+@app.get("/api/connections/live")
+async def connections_live():
+    """Actively re-query every live source right now and return real statuses."""
+    await pipeline.probe_connections()
+    return {"connections": pipeline.CONNECTIONS.get()}
+
+
+@app.get("/api/live")
+async def live_payload():
+    """Full real-time payload: live events (with real imagery), weather and destination."""
+    events, weather, destination = await asyncio.gather(
+        asyncio.to_thread(live_data.fetch_events),
+        asyncio.to_thread(live_data.fetch_weather),
+        asyncio.to_thread(live_data.fetch_destination_interest),
+    )
+    return {"events": events, "weather": weather, "destination": destination,
+            "fetched_at": __import__("datetime").datetime.now().isoformat(timespec="seconds")}
 
 
 @app.get("/api/organisation")

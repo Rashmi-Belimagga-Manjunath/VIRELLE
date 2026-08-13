@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from "react";
-import { motion } from "framer-motion";
+import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 import {
   Radar,
   Sparkles,
@@ -12,8 +12,10 @@ import {
   Database,
   CloudSun,
   Workflow,
+  ChevronDown,
 } from "lucide-react";
 import { TEAM, STAGES, MISSION_SUGGESTIONS } from "../constants.jsx";
+import { GALLERY } from "../components/Images.jsx";
 
 const ICONS = {
   radar: Radar,
@@ -76,70 +78,174 @@ function ParticleField() {
 const ease = [0.22, 1, 0.36, 1];
 
 export default function Landing({ navigate, onOperate }) {
+  const heroRef = useRef(null);
+
+  const mx = useMotionValue(0);
+  const my = useMotionValue(0);
+  const sx = useSpring(mx, { stiffness: 50, damping: 18 });
+  const sy = useSpring(my, { stiffness: 50, damping: 18 });
+  const sxImg = useSpring(useTransform(mx, (v) => v * -18), { stiffness: 40, damping: 22 });
+  const syImg = useSpring(useTransform(my, (v) => v * -12), { stiffness: 40, damping: 22 });
+  const sxGlow = useSpring(useTransform(mx, (v) => v * 46), { stiffness: 45, damping: 20 });
+  const syGlow = useSpring(useTransform(my, (v) => v * 40), { stiffness: 45, damping: 20 });
+  const sxCard = useSpring(useTransform(mx, (v) => v * 22), { stiffness: 45, damping: 20 });
+  const syCard = useSpring(useTransform(my, (v) => v * 18), { stiffness: 45, damping: 20 });
+
+  const onHeroMove = (e) => {
+    const r = heroRef.current?.getBoundingClientRect();
+    if (!r) return;
+    mx.set(((e.clientX - r.left) / r.width) * 2 - 1);
+    my.set(((e.clientY - r.top) / r.height) * 2 - 1);
+  };
+
   return (
     <div className="relative">
-      {/* ================= HERO ================= */}
-      <section className="grain relative flex min-h-[88vh] flex-col items-center justify-center overflow-hidden px-6 pt-16 pb-10">
-        <div className="aurora h-[50rem] w-[50rem] -top-72 left-1/2 -translate-x-1/2 bg-gold-500/[0.14]" />
-        <div className="aurora h-[30rem] w-[30rem] top-24 -left-40 bg-rose-500/[0.08]" />
-        <div className="aurora h-[30rem] w-[30rem] top-24 -right-40 bg-sky-500/[0.08]" />
+      {/* ================= HERO — MOTION HOTEL BANNER ================= */}
+      <section
+        ref={heroRef}
+        onMouseMove={onHeroMove}
+        onMouseLeave={() => {
+          mx.set(0);
+          my.set(0);
+        }}
+        className="grain relative flex min-h-[94vh] flex-col items-center justify-center overflow-hidden px-6 pt-16 pb-10"
+      >
+        {/* hotel banner image with Ken Burns drift + mouse parallax */}
+        <motion.div
+          className="absolute inset-0"
+          style={{ x: sxImg, y: syImg, scale: 1.08 }}
+        >
+          <img
+            src={GALLERY.hero.src}
+            alt="The Virelle Dublin"
+            className="kenburns h-full w-full object-cover"
+            loading="eager"
+          />
+        </motion.div>
+        <div className="absolute inset-0 bg-gradient-to-b from-ink-950/85 via-ink-950/45 to-ink-950" />
+        <div className="absolute inset-0 bg-gradient-to-r from-ink-950/75 via-transparent to-ink-950/35" />
+
+        {/* parallax glow layers */}
+        <motion.div
+          className="aurora h-[46rem] w-[46rem] -top-64 left-1/2 -translate-x-1/2 bg-gold-500/[0.18]"
+          style={{ x: sxGlow, y: syGlow }}
+        />
+        <motion.div
+          className="aurora h-[26rem] w-[26rem] top-24 -left-32 bg-rose-500/10"
+          style={{ x: sxGlow, y: useTransform(syGlow, (v) => v * 1.4) }}
+        />
+        <motion.div
+          className="aurora h-[26rem] w-[26rem] top-24 -right-32 bg-sky-500/10"
+          style={{ x: useTransform(sxGlow, (v) => v * -1.2), y: syGlow }}
+        />
         <ParticleField />
 
+        {/* floating live-inventory card */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, ease }}
-          className="relative z-10 mb-8 flex items-center gap-3 rounded-full border border-gold-500/20 bg-gold-500/5 px-5 py-2 backdrop-blur"
+          className="float-slow absolute right-10 top-28 z-10 hidden xl:block"
+          style={{ x: sxCard, y: syCard }}
         >
-          <span className="h-2 w-2 rounded-full bg-emerald-400 pulse-dot" />
-          <span className="font-mono text-[11px] tracking-widest text-gold-300/90">
-            LIVE OPERATION · REALTIME INTELLIGENCE · 5 AGENTS · 1 DECISION
-          </span>
+          <div className="glass rounded-2xl px-5 py-4">
+            <div className="flex items-center gap-2">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 pulse-dot" />
+              <span className="font-mono text-[9px] tracking-widest text-emerald-300">LIVE · SATURDAY INVENTORY</span>
+            </div>
+            <p className="mt-1.5 font-serif text-3xl text-cream">31<span className="text-lg text-cream/40"> unsold rooms</span></p>
+            <p className="mt-0.5 text-[10px] text-cream/40">The Virelle Dublin · next Saturday</p>
+          </div>
         </motion.div>
 
-        <h1 className="relative z-10 max-w-5xl text-center font-serif leading-[1.04]">
-          <Word stagger delay={0.1}>From</Word> <Word stagger delay={0.18}>live</Word>{" "}
-          <Word stagger delay={0.26}>signals</Word>
-          <br />
-          <Word stagger delay={0.4}>to</Word>{" "}
-          <span className="gold-text">
-            <Word stagger delay={0.5}>exceptional</Word>
-          </span>{" "}
-          <Word stagger delay={0.58}>experiences.</Word>
-        </h1>
+        {/* floating organisation card */}
+        <motion.div
+          className="float-slow absolute bottom-32 left-10 z-10 hidden xl:block"
+          style={{ x: useTransform(sxCard, (v) => v * -1), y: useTransform(syCard, (v) => v * -1) }}
+        >
+          <div className="glass rounded-2xl px-5 py-4" style={{ animationDelay: "-3.5s" }}>
+            <div className="flex items-center gap-2">
+              <Activity size={12} className="text-gold-400" />
+              <span className="font-mono text-[9px] tracking-widest text-gold-300/80">THE ORGANISATION</span>
+            </div>
+            <p className="mt-1.5 font-mono text-[11px] text-cream/70">
+              5 agents · 3 live sources · 12 MCP tools · 1 decision
+            </p>
+          </div>
+        </motion.div>
 
-        <motion.p
+        {/* headline content */}
+        <motion.div
+          className="relative z-10 text-center"
+          style={{ x: sx, y: sy }}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 1.0, duration: 0.8 }}
-          className="relative z-10 mt-7 max-w-2xl text-center text-lg font-light leading-relaxed text-cream/65"
         >
-          VIRELLE is a fully agentic AI organisation for luxury hospitality.
-          <br className="hidden sm:block" />
-          Research, design, build, communicate and decide — as one continuous,
-          evidence-driven chain.
-        </motion.p>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, ease }}
+            className="mx-auto mb-8 flex w-fit items-center gap-3 rounded-full border border-gold-500/20 bg-ink-950/40 px-5 py-2 backdrop-blur"
+          >
+            <span className="h-2 w-2 rounded-full bg-emerald-400 pulse-dot" />
+            <span className="font-mono text-[11px] tracking-widest text-gold-300/90">
+              LIVE OPERATION · REALTIME INTELLIGENCE · 5 AGENTS · 1 DECISION
+            </span>
+          </motion.div>
 
+          <h1 className="max-w-5xl text-center font-serif leading-[1.04] text-cream">
+            <Word stagger delay={0.1}>From</Word> <Word stagger delay={0.18}>live</Word>{" "}
+            <Word stagger delay={0.26}>signals</Word>
+            <br />
+            <Word stagger delay={0.4}>to</Word>{" "}
+            <span className="gold-text">
+              <Word stagger delay={0.5}>exceptional</Word>
+            </span>{" "}
+            <Word stagger delay={0.58}>experiences.</Word>
+          </h1>
+
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1.0, duration: 0.8 }}
+            className="mt-7 max-w-2xl text-center text-lg font-light leading-relaxed text-cream/70"
+          >
+            VIRELLE is a fully agentic AI organisation for luxury hospitality.
+            <br className="hidden sm:block" />
+            Research, design, build, communicate and decide — as one continuous,
+            evidence-driven chain.
+          </motion.p>
+
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.15, duration: 0.7, ease }}
+            className="mt-9 flex flex-col items-center justify-center gap-4 sm:flex-row"
+          >
+            <button
+              onClick={() => onOperate("Find a high-value opportunity to increase weekend revenue.")}
+              className="group flex items-center gap-2 rounded-full bg-gold-fade px-8 py-3.5 text-sm font-medium text-ink-950 shadow-glow transition-transform hover:scale-[1.04]"
+            >
+              <Zap size={16} className="text-ink-950" />
+              Start an operation
+              <ArrowRight size={15} className="transition-transform group-hover:translate-x-1" />
+            </button>
+            <button
+              onClick={() => navigate("team")}
+              className="rounded-full border border-cream/20 bg-ink-950/30 px-8 py-3.5 text-sm text-cream/80 backdrop-blur transition-colors hover:border-gold-500/40 hover:text-gold-300"
+            >
+              Meet the team
+            </button>
+          </motion.div>
+        </motion.div>
+
+        {/* scroll cue */}
         <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.15, duration: 0.7, ease }}
-          className="relative z-10 mt-9 flex flex-col items-center gap-4 sm:flex-row"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 2, duration: 1 }}
+          className="absolute bottom-5 left-1/2 z-10 -translate-x-1/2"
         >
-          <button
-            onClick={() => onOperate("Find a high-value opportunity to increase weekend revenue.")}
-            className="group flex items-center gap-2 rounded-full bg-gold-fade px-8 py-3.5 text-sm font-medium text-ink-950 shadow-glow transition-transform hover:scale-[1.04]"
-          >
-            <Zap size={16} className="text-ink-950" />
-            Start an operation
-            <ArrowRight size={15} className="transition-transform group-hover:translate-x-1" />
-          </button>
-          <button
-            onClick={() => navigate("team")}
-            className="rounded-full border border-cream/15 px-8 py-3.5 text-sm text-cream/80 transition-colors hover:border-gold-500/40 hover:text-gold-300"
-          >
-            Meet the team
-          </button>
+          <motion.div animate={{ y: [0, 8, 0] }} transition={{ repeat: Infinity, duration: 1.8 }}>
+            <ChevronDown size={20} className="text-gold-400/80" />
+          </motion.div>
         </motion.div>
 
         <motion.div
@@ -203,14 +309,14 @@ export default function Landing({ navigate, onOperate }) {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-60px" }}
                 transition={{ delay: i * 0.1, duration: 0.6, ease }}
-                className="group relative overflow-hidden rounded-2xl border p-6 transition-colors"
+                className="group relative overflow-hidden rounded-2xl border p-6 transition-colors hover:-translate-y-1"
                 style={{ borderColor: `${t.color}22`, background: t.accent }}
               >
                 <span className="font-mono text-[11px]" style={{ color: t.color }}>
                   {t.number}
                 </span>
                 <div
-                  className="mt-4 grid h-10 w-10 place-items-center rounded-xl"
+                  className="mt-4 grid h-10 w-10 place-items-center rounded-xl transition-transform group-hover:scale-110"
                   style={{ background: `${t.color}1f`, border: `1px solid ${t.color}33` }}
                 >
                   <Icon size={18} style={{ color: t.color }} />
@@ -266,7 +372,7 @@ export default function Landing({ navigate, onOperate }) {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.1, duration: 0.6, ease }}
-              className="glass-light rounded-2xl p-7"
+              className="glass-light rounded-2xl p-7 transition-colors hover:border-gold-500/20"
             >
               <span className="font-serif text-5xl text-gold-500/40">{s.tag}</span>
               <h3 className="mt-3 font-serif text-2xl text-cream">{s.title}</h3>

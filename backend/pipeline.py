@@ -15,7 +15,7 @@ import agents
 import config
 import llm
 import live_data
-from toolkit import Toolkit
+from toolkit import Toolkit, HOTEL_TOOL_NAMES, LIVE_TOOL_NAMES
 
 OPERATION_GOAL = (
     "Increase weekend revenue at The Virelle Dublin by converting unsold inventory "
@@ -134,6 +134,80 @@ def init_pipeline(mcp_client) -> None:
     global toolkit_mcp, toolkit
     toolkit_mcp = mcp_client
     toolkit = Toolkit(mcp_client)
+
+
+async def probe_connections() -> dict:
+    """Actively query every live source right now and publish real statuses.
+
+    Runs the three external feeds in parallel, checks the MCP process and the
+    hotel database, and records fresh results in CONNECTIONS so the UI never
+    has to show a stale "idle" state. This is what the Intelligence page
+    polls and what a manual "Recheck now" triggers.
+    """
+    results = {}
+
+    async def _events():
+        payload = await asyncio.to_thread(live_data.fetch_events)
+        status = payload["status"]
+        detail = None
+        if status == "connected" and payload.get("events"):
+            nxt = payload["events"][0]
+            detail = f"{payload['count']} events in window · next: {nxt['name']} ({nxt['start_date']})"
+        CONNECTIONS.set("Fáilte Ireland Events API", status, payload["fetched_at"],
+                        detail or payload.get("error"))
+        results["events"] = {"status": status, "detail": detail or payload.get("error"),
+                             "fetched_at": payload["fetched_at"]}
+
+    async def _weather():
+        payload = await asyncio.to_thread(live_data.fetch_weather)
+        s = payload.get("summary")
+        status = payload["status"]
+        detail = None
+        if status == "connected" and s:
+            detail = (f"Now {s['temperature_c']}°C {s['condition']} · wind {s['wind_kmh']} km/h · "
+                      f"precip {s['forecast'][0]['precip_prob']}% tomorrow")
+        CONNECTIONS.set("Open-Meteo Weather API", status, payload["fetched_at"],
+                        detail or payload.get("error"))
+        results["weather"] = {"status": status, "detail": detail or payload.get("error"),
+                              "fetched_at": payload["fetched_at"]}
+
+    async def _dest():
+        payload = await asyncio.to_thread(live_data.fetch_destination_interest)
+        s = payload.get("summary")
+        status = payload["status"]
+        detail = None
+        if status == "connected" and s:
+            detail = (f"Dublin interest {s['trend']} ({s['trend_pct']:+}% WoW) · "
+                      f"{s['latest_daily_views']:,} views latest day")
+        CONNECTIONS.set("Dublin Destination Signals", status, payload["fetched_at"],
+                        detail or payload.get("error"))
+        results["destination"] = {"status": status, "detail": detail or payload.get("error"),
+                                  "fetched_at": payload["fetched_at"]}
+
+    async def _mcp():
+        connected = bool(toolkit_mcp and toolkit_mcp.connected)
+        n_tools = len(HOTEL_TOOL_NAMES) + len(LIVE_TOOL_NAMES)
+        detail = f"{n_tools} tools ready" if connected else (toolkit_mcp.error if toolkit_mcp else "Not initialised")
+        CONNECTIONS.set(MCP_CONNECTION_NAME, "connected" if connected else "connecting",
+                        dt.datetime.now().isoformat(timespec="seconds"), detail)
+        results["mcp"] = {"status": "connected" if connected else "connecting", "detail": detail}
+
+    async def _db():
+        try:
+            import sqlite3
+            conn = sqlite3.connect(config.DB_PATH)
+            rooms = conn.execute("SELECT COUNT(*) FROM rooms").fetchone()[0]
+            bookings = conn.execute("SELECT COUNT(*) FROM bookings").fetchone()[0]
+            conn.close()
+            status, detail = "connected", f"SQLite · {rooms} rooms · {bookings} bookings on file"
+        except Exception as exc:  # noqa: BLE001
+            status, detail = "error", f"{type(exc).__name__}: {exc}"
+        CONNECTIONS.set(HOTEL_DB_CONNECTION_NAME, status,
+                        dt.datetime.now().isoformat(timespec="seconds"), detail)
+        results["db"] = {"status": status, "detail": detail}
+
+    await asyncio.gather(_events(), _weather(), _dest(), _mcp(), _db())
+    return results
 
 
 def _fmt_tool_args(args: dict) -> str:

@@ -1,0 +1,170 @@
+[
+  {
+    "id": 1,
+    "stay_date": "2026-08-14",
+    "available": 24,
+    "rooms_total": 84,
+    "category": "standard",
+    "recomputed_at": "2026-08-14T00:15:47.171488"
+  },
+  {
+    "id": 2,
+    "stay_date": "2026-08-15",
+    "available": 31,
+    "rooms_total": 84,
+    "category": "standard",
+    "recomputed_at": "2026-08-14T00:15:47.171494"
+  },
+  {
+    "id": 3,
+    "stay_date": "2026-08-16",
+    "available": 38,
+    "rooms_total": 84,
+    "category": "standard",
+    "recomputed_at": "2026-08-14T00:15:47.171497"
+  },
+  {
+    "id": 4,
+    "stay_date": "2026-08-17",
+    "available": 15,
+    "rooms_total": 84,
+    "category": "standard",
+    "recomputed_at": "2026-08-14T00:15:47.171499"
+  },
+  {
+    "id": 5,
+    "stay_date": "2026-08-18",
+    "available": 16,
+    "rooms_total": 84,
+    "category": "standard",
+    "recomputed_at": "2026-08-14T00:15:47.171500"
+  },
+  {
+    "id": 6,
+    "stay_date": "2026-08-19",
+    "available": 12,
+    "rooms_total": 84,
+    "category": "standard",
+    "recomputed_at": "2026-08-14T00:15:47.171502"
+  },
+  {
+    "id": 7,
+    "stay_date": "2026-08-20",
+    "available": 13,
+    "rooms_total": 84,
+    "category": "standard",
+    "recomputed_at": "2026-08-14T00:15:47.171503"
+  },
+  {
+    "id": 8,
+    "stay_date": "2026-08-21",
+    "available": 24,
+    "rooms_total": 84,
+    "category": "standard",
+    "recomputed_at": "2026-08-14T00:15:47.171505"
+  },
+  {
+    "id": 9,
+    "stay_date": "2026-08-22",
+    "available": 31,
+    "rooms_total": 84,
+    "category": "standard",
+    "recomputed_at": "2026-08-14T00:15:47.171506"
+  },
+  {
+    "id": 10,
+    "stay_date": "2026-08-23",
+    "available": 38,
+    "rooms_total": 84,
+    "category": "standard",
+    "recomputed_at": "2026-08-14T00:15:47.171508"
+  },
+  {
+    "id": 11,
+    "stay_date": "2026-08-24",
+    "available": 12,
+    "rooms_total": 84,
+    "category": "standard",
+    "recomputed_at": "2026-08-14T00:15:47.171509"
+  },
+  {
+    "id": 12,
+    "stay_date": "2026-08-25",
+    "available": 13,
+    "rooms_total": 84,
+    "category": "standard",
+    "recomputed_at": "2026-08-14T00:15:47.171510"
+  },
+  {
+    "id": 13,
+    "stay_date": "2026-08-26",
+    "available": 14,
+    "rooms_total": 84,
+    "category": "standard",
+    "recomputed_at": "2026-08-14T00:15:47.171512"
+  },
+  {
+    "id": 14,
+    "stay_date": "2026-08-27",
+    "available": 15,
+    "rooms_total": 84,
+    "category": "standard",
+    "recomputed_at": "2026-08-14T00:15:47.171513"
+  },
+  {
+    "id": 15,
+    "stay_date": "2026-08-28",
+    "available": 24,
+    "rooms_total": 84,
+    "category": "standard",
+    "recomputed_at": "2026-08-14T00:15:47.171514"
+  },
+  {
+    "id": 16,
+    "stay_date": "2026-08-29",
+    "available": 31,
+    "rooms_total": 84,
+    "category": "standard",
+    "recomputed_at": "2026-08-14T00:15:47.171518"
+  },
+  {
+    "id": 17,
+    "stay_date": "2026-08-30",
+    "available": 38,
+    "rooms_total": 84,
+    "category": "standard",
+    "recomputed_at": "2026-08-14T00:15:47.171520"
+  },
+  {
+    "id": 18,
+    "stay_date": "2026-08-31",
+    "available": 14,
+    "rooms_total": 84,
+    "category": "standard",
+    "recomputed_at": "2026-08-14T00:15:47.171521"
+  },
+  {
+    "id": 19,
+    "stay_date": "2026-09-01",
+    "available": 15,
+    "rooms_total": 84,
+    "category": "standard",
+    "recomputed_at": "2026-08-14T00:15:47.171522"
+  },
+  {
+    "id": 20,
+    "stay_date": "2026-09-02",
+    "available": 16,
+    "rooms_total": 84,
+    "category": "standard",
+    "recomputed_at": "2026-08-14T00:15:47.171524"
+  },
+  {
+    "id": 21,
+    "stay_date": "2026-09-03",
+    "available": 12,
+    "rooms_total": 84,
+    "category": "standard",
+    "recomputed_at": "2026-08-14T00:15:47.171525"
+  }
+]

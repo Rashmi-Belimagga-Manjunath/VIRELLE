@@ -1,0 +1,758 @@
+[
+  {
+    "id": 1,
+    "hotel_id": 1,
+    "name": "Classic Room",
+    "room_type": "classic",
+    "base_rate": 285.0,
+    "weekend_rate": 340.0,
+    "status": "operational"
+  },
+  {
+    "id": 2,
+    "hotel_id": 1,
+    "name": "Classic Room",
+    "room_type": "classic",
+    "base_rate": 285.0,
+    "weekend_rate": 340.0,
+    "status": "operational"
+  },
+  {
+    "id": 3,
+    "hotel_id": 1,
+    "name": "Classic Room",
+    "room_type": "classic",
+    "base_rate": 285.0,
+    "weekend_rate": 340.0,
+    "status": "operational"
+  },
+  {
+    "id": 4,
+    "hotel_id": 1,
+    "name": "Classic Room",
+    "room_type": "classic",
+    "base_rate": 285.0,
+    "weekend_rate": 340.0,
+    "status": "operational"
+  },
+  {
+    "id": 5,
+    "hotel_id": 1,
+    "name": "Classic Room",
+    "room_type": "classic",
+    "base_rate": 285.0,
+    "weekend_rate": 340.0,
+    "status": "operational"
+  },
+  {
+    "id": 6,
+    "hotel_id": 1,
+    "name": "Classic Room",
+    "room_type": "classic",
+    "base_rate": 285.0,
+    "weekend_rate": 340.0,
+    "status": "operational"
+  },
+  {
+    "id": 7,
+    "hotel_id": 1,
+    "name": "Classic Room",
+    "room_type": "classic",
+    "base_rate": 285.0,
+    "weekend_rate": 340.0,
+    "status": "operational"
+  },
+  {
+    "id": 8,
+    "hotel_id": 1,
+    "name": "Classic Room",
+    "room_type": "classic",
+    "base_rate": 285.0,
+    "weekend_rate": 340.0,
+    "status": "operational"
+  },
+  {
+    "id": 9,
+    "hotel_id": 1,
+    "name": "Classic Room",
+    "room_type": "classic",
+    "base_rate": 285.0,
+    "weekend_rate": 340.0,
+    "status": "operational"
+  },
+  {
+    "id": 10,
+    "hotel_id": 1,
+    "name": "Classic Room",
+    "room_type": "classic",
+    "base_rate": 285.0,
+    "weekend_rate": 340.0,
+    "status": "operational"
+  },
+  {
+    "id": 11,
+    "hotel_id": 1,
+    "name": "Classic Room",
+    "room_type": "classic",
+    "base_rate": 285.0,
+    "weekend_rate": 340.0,
+    "status": "operational"
+  },
+  {
+    "id": 12,
+    "hotel_id": 1,
+    "name": "Classic Room",
+    "room_type": "classic",
+    "base_rate": 285.0,
+    "weekend_rate": 340.0,
+    "status": "operational"
+  },
+  {
+    "id": 13,
+    "hotel_id": 1,
+    "name": "Classic Room",
+    "room_type": "classic",
+    "base_rate": 285.0,
+    "weekend_rate": 340.0,
+    "status": "operational"
+  },
+  {
+    "id": 14,
+    "hotel_id": 1,
+    "name": "Classic Room",
+    "room_type": "classic",
+    "base_rate": 285.0,
+    "weekend_rate": 340.0,
+    "status": "operational"
+  },
+  {
+    "id": 15,
+    "hotel_id": 1,
+    "name": "Classic Room",
+    "room_type": "classic",
+    "base_rate": 285.0,
+    "weekend_rate": 340.0,
+    "status": "operational"
+  },
+  {
+    "id": 16,
+    "hotel_id": 1,
+    "name": "Classic Room",
+    "room_type": "classic",
+    "base_rate": 285.0,
+    "weekend_rate": 340.0,
+    "status": "operational"
+  },
+  {
+    "id": 17,
+    "hotel_id": 1,
+    "name": "Classic Room",
+    "room_type": "classic",
+    "base_rate": 285.0,
+    "weekend_rate": 340.0,
+    "status": "operational"
+  },
+  {
+    "id": 18,
+    "hotel_id": 1,
+    "name": "Classic Room",
+    "room_type": "classic",
+    "base_rate": 285.0,
+    "weekend_rate": 340.0,
+    "status": "operational"
+  },
+  {
+    "id": 19,
+    "hotel_id": 1,
+    "name": "Classic Room",
+    "room_type": "classic",
+    "base_rate": 285.0,
+    "weekend_rate": 340.0,
+    "status": "operational"
+  },
+  {
+    "id": 20,
+    "hotel_id": 1,
+    "name": "Classic Room",
+    "room_type": "classic",
+    "base_rate": 285.0,
+    "weekend_rate": 340.0,
+    "status": "operational"
+  },
+  {
+    "id": 21,
+    "hotel_id": 1,
+    "name": "Classic Room",
+    "room_type": "classic",
+    "base_rate": 285.0,
+    "weekend_rate": 340.0,
+    "status": "operational"
+  },
+  {
+    "id": 22,
+    "hotel_id": 1,
+    "name": "Classic Room",
+    "room_type": "classic",
+    "base_rate": 285.0,
+    "weekend_rate": 340.0,
+    "status": "operational"
+  },
+  {
+    "id": 23,
+    "hotel_id": 1,
+    "name": "Classic Room",
+    "room_type": "classic",
+    "base_rate": 285.0,
+    "weekend_rate": 340.0,
+    "status": "operational"
+  },
+  {
+    "id": 24,
+    "hotel_id": 1,
+    "name": "Classic Room",
+    "room_type": "classic",
+    "base_rate": 285.0,
+    "weekend_rate": 340.0,
+    "status": "operational"
+  },
+  {
+    "id": 25,
+    "hotel_id": 1,
+    "name": "Classic Room",
+    "room_type": "classic",
+    "base_rate": 285.0,
+    "weekend_rate": 340.0,
+    "status": "operational"
+  },
+  {
+    "id": 26,
+    "hotel_id": 1,
+    "name": "Classic Room",
+    "room_type": "classic",
+    "base_rate": 285.0,
+    "weekend_rate": 340.0,
+    "status": "operational"
+  },
+  {
+    "id": 27,
+    "hotel_id": 1,
+    "name": "Classic Room",
+    "room_type": "classic",
+    "base_rate": 285.0,
+    "weekend_rate": 340.0,
+    "status": "operational"
+  },
+  {
+    "id": 28,
+    "hotel_id": 1,
+    "name": "Classic Room",
+    "room_type": "classic",
+    "base_rate": 285.0,
+    "weekend_rate": 340.0,
+    "status": "operational"
+  },
+  {
+    "id": 29,
+    "hotel_id": 1,
+    "name": "Classic Room",
+    "room_type": "classic",
+    "base_rate": 285.0,
+    "weekend_rate": 340.0,
+    "status": "operational"
+  },
+  {
+    "id": 30,
+    "hotel_id": 1,
+    "name": "Classic Room",
+    "room_type": "classic",
+    "base_rate": 285.0,
+    "weekend_rate": 340.0,
+    "status": "operational"
+  },
+  {
+    "id": 31,
+    "hotel_id": 1,
+    "name": "Deluxe Room",
+    "room_type": "deluxe",
+    "base_rate": 360.0,
+    "weekend_rate": 430.0,
+    "status": "operational"
+  },
+  {
+    "id": 32,
+    "hotel_id": 1,
+    "name": "Deluxe Room",
+    "room_type": "deluxe",
+    "base_rate": 360.0,
+    "weekend_rate": 430.0,
+    "status": "operational"
+  },
+  {
+    "id": 33,
+    "hotel_id": 1,
+    "name": "Deluxe Room",
+    "room_type": "deluxe",
+    "base_rate": 360.0,
+    "weekend_rate": 430.0,
+    "status": "operational"
+  },
+  {
+    "id": 34,
+    "hotel_id": 1,
+    "name": "Deluxe Room",
+    "room_type": "deluxe",
+    "base_rate": 360.0,
+    "weekend_rate": 430.0,
+    "status": "operational"
+  },
+  {
+    "id": 35,
+    "hotel_id": 1,
+    "name": "Deluxe Room",
+    "room_type": "deluxe",
+    "base_rate": 360.0,
+    "weekend_rate": 430.0,
+    "status": "operational"
+  },
+  {
+    "id": 36,
+    "hotel_id": 1,
+    "name": "Deluxe Room",
+    "room_type": "deluxe",
+    "base_rate": 360.0,
+    "weekend_rate": 430.0,
+    "status": "operational"
+  },
+  {
+    "id": 37,
+    "hotel_id": 1,
+    "name": "Deluxe Room",
+    "room_type": "deluxe",
+    "base_rate": 360.0,
+    "weekend_rate": 430.0,
+    "status": "operational"
+  },
+  {
+    "id": 38,
+    "hotel_id": 1,
+    "name": "Deluxe Room",
+    "room_type": "deluxe",
+    "base_rate": 360.0,
+    "weekend_rate": 430.0,
+    "status": "operational"
+  },
+  {
+    "id": 39,
+    "hotel_id": 1,
+    "name": "Deluxe Room",
+    "room_type": "deluxe",
+    "base_rate": 360.0,
+    "weekend_rate": 430.0,
+    "status": "operational"
+  },
+  {
+    "id": 40,
+    "hotel_id": 1,
+    "name": "Deluxe Room",
+    "room_type": "deluxe",
+    "base_rate": 360.0,
+    "weekend_rate": 430.0,
+    "status": "operational"
+  },
+  {
+    "id": 41,
+    "hotel_id": 1,
+    "name": "Deluxe Room",
+    "room_type": "deluxe",
+    "base_rate": 360.0,
+    "weekend_rate": 430.0,
+    "status": "operational"
+  },
+  {
+    "id": 42,
+    "hotel_id": 1,
+    "name": "Deluxe Room",
+    "room_type": "deluxe",
+    "base_rate": 360.0,
+    "weekend_rate": 430.0,
+    "status": "operational"
+  },
+  {
+    "id": 43,
+    "hotel_id": 1,
+    "name": "Deluxe Room",
+    "room_type": "deluxe",
+    "base_rate": 360.0,
+    "weekend_rate": 430.0,
+    "status": "operational"
+  },
+  {
+    "id": 44,
+    "hotel_id": 1,
+    "name": "Deluxe Room",
+    "room_type": "deluxe",
+    "base_rate": 360.0,
+    "weekend_rate": 430.0,
+    "status": "operational"
+  },
+  {
+    "id": 45,
+    "hotel_id": 1,
+    "name": "Deluxe Room",
+    "room_type": "deluxe",
+    "base_rate": 360.0,
+    "weekend_rate": 430.0,
+    "status": "operational"
+  },
+  {
+    "id": 46,
+    "hotel_id": 1,
+    "name": "Deluxe Room",
+    "room_type": "deluxe",
+    "base_rate": 360.0,
+    "weekend_rate": 430.0,
+    "status": "operational"
+  },
+  {
+    "id": 47,
+    "hotel_id": 1,
+    "name": "Deluxe Room",
+    "room_type": "deluxe",
+    "base_rate": 360.0,
+    "weekend_rate": 430.0,
+    "status": "operational"
+  },
+  {
+    "id": 48,
+    "hotel_id": 1,
+    "name": "Deluxe Room",
+    "room_type": "deluxe",
+    "base_rate": 360.0,
+    "weekend_rate": 430.0,
+    "status": "operational"
+  },
+  {
+    "id": 49,
+    "hotel_id": 1,
+    "name": "Deluxe Room",
+    "room_type": "deluxe",
+    "base_rate": 360.0,
+    "weekend_rate": 430.0,
+    "status": "operational"
+  },
+  {
+    "id": 50,
+    "hotel_id": 1,
+    "name": "Deluxe Room",
+    "room_type": "deluxe",
+    "base_rate": 360.0,
+    "weekend_rate": 430.0,
+    "status": "operational"
+  },
+  {
+    "id": 51,
+    "hotel_id": 1,
+    "name": "Deluxe Room",
+    "room_type": "deluxe",
+    "base_rate": 360.0,
+    "weekend_rate": 430.0,
+    "status": "operational"
+  },
+  {
+    "id": 52,
+    "hotel_id": 1,
+    "name": "Deluxe Room",
+    "room_type": "deluxe",
+    "base_rate": 360.0,
+    "weekend_rate": 430.0,
+    "status": "operational"
+  },
+  {
+    "id": 53,
+    "hotel_id": 1,
+    "name": "Deluxe Room",
+    "room_type": "deluxe",
+    "base_rate": 360.0,
+    "weekend_rate": 430.0,
+    "status": "operational"
+  },
+  {
+    "id": 54,
+    "hotel_id": 1,
+    "name": "Deluxe Room",
+    "room_type": "deluxe",
+    "base_rate": 360.0,
+    "weekend_rate": 430.0,
+    "status": "operational"
+  },
+  {
+    "id": 55,
+    "hotel_id": 1,
+    "name": "Junior Suite",
+    "room_type": "junior_suite",
+    "base_rate": 480.0,
+    "weekend_rate": 575.0,
+    "status": "operational"
+  },
+  {
+    "id": 56,
+    "hotel_id": 1,
+    "name": "Junior Suite",
+    "room_type": "junior_suite",
+    "base_rate": 480.0,
+    "weekend_rate": 575.0,
+    "status": "operational"
+  },
+  {
+    "id": 57,
+    "hotel_id": 1,
+    "name": "Junior Suite",
+    "room_type": "junior_suite",
+    "base_rate": 480.0,
+    "weekend_rate": 575.0,
+    "status": "operational"
+  },
+  {
+    "id": 58,
+    "hotel_id": 1,
+    "name": "Junior Suite",
+    "room_type": "junior_suite",
+    "base_rate": 480.0,
+    "weekend_rate": 575.0,
+    "status": "operational"
+  },
+  {
+    "id": 59,
+    "hotel_id": 1,
+    "name": "Junior Suite",
+    "room_type": "junior_suite",
+    "base_rate": 480.0,
+    "weekend_rate": 575.0,
+    "status": "operational"
+  },
+  {
+    "id": 60,
+    "hotel_id": 1,
+    "name": "Junior Suite",
+    "room_type": "junior_suite",
+    "base_rate": 480.0,
+    "weekend_rate": 575.0,
+    "status": "operational"
+  },
+  {
+    "id": 61,
+    "hotel_id": 1,
+    "name": "Junior Suite",
+    "room_type": "junior_suite",
+    "base_rate": 480.0,
+    "weekend_rate": 575.0,
+    "status": "operational"
+  },
+  {
+    "id": 62,
+    "hotel_id": 1,
+    "name": "Junior Suite",
+    "room_type": "junior_suite",
+    "base_rate": 480.0,
+    "weekend_rate": 575.0,
+    "status": "operational"
+  },
+  {
+    "id": 63,
+    "hotel_id": 1,
+    "name": "Junior Suite",
+    "room_type": "junior_suite",
+    "base_rate": 480.0,
+    "weekend_rate": 575.0,
+    "status": "operational"
+  },
+  {
+    "id": 64,
+    "hotel_id": 1,
+    "name": "Junior Suite",
+    "room_type": "junior_suite",
+    "base_rate": 480.0,
+    "weekend_rate": 575.0,
+    "status": "operational"
+  },
+  {
+    "id": 65,
+    "hotel_id": 1,
+    "name": "Signature Suite",
+    "room_type": "signature_suite",
+    "base_rate": 620.0,
+    "weekend_rate": 745.0,
+    "status": "operational"
+  },
+  {
+    "id": 66,
+    "hotel_id": 1,
+    "name": "Signature Suite",
+    "room_type": "signature_suite",
+    "base_rate": 620.0,
+    "weekend_rate": 745.0,
+    "status": "operational"
+  },
+  {
+    "id": 67,
+    "hotel_id": 1,
+    "name": "Signature Suite",
+    "room_type": "signature_suite",
+    "base_rate": 620.0,
+    "weekend_rate": 745.0,
+    "status": "operational"
+  },
+  {
+    "id": 68,
+    "hotel_id": 1,
+    "name": "Signature Suite",
+    "room_type": "signature_suite",
+    "base_rate": 620.0,
+    "weekend_rate": 745.0,
+    "status": "operational"
+  },
+  {
+    "id": 69,
+    "hotel_id": 1,
+    "name": "Signature Suite",
+    "room_type": "signature_suite",
+    "base_rate": 620.0,
+    "weekend_rate": 745.0,
+    "status": "operational"
+  },
+  {
+    "id": 70,
+    "hotel_id": 1,
+    "name": "Signature Suite",
+    "room_type": "signature_suite",
+    "base_rate": 620.0,
+    "weekend_rate": 745.0,
+    "status": "operational"
+  },
+  {
+    "id": 71,
+    "hotel_id": 1,
+    "name": "Signature Suite",
+    "room_type": "signature_suite",
+    "base_rate": 620.0,
+    "weekend_rate": 745.0,
+    "status": "operational"
+  },
+  {
+    "id": 72,
+    "hotel_id": 1,
+    "name": "Signature Suite",
+    "room_type": "signature_suite",
+    "base_rate": 620.0,
+    "weekend_rate": 745.0,
+    "status": "operational"
+  },
+  {
+    "id": 73,
+    "hotel_id": 1,
+    "name": "Signature Suite",
+    "room_type": "signature_suite",
+    "base_rate": 620.0,
+    "weekend_rate": 745.0,
+    "status": "operational"
+  },
+  {
+    "id": 74,
+    "hotel_id": 1,
+    "name": "Signature Suite",
+    "room_type": "signature_suite",
+    "base_rate": 620.0,
+    "weekend_rate": 745.0,
+    "status": "operational"
+  },
+  {
+    "id": 75,
+    "hotel_id": 1,
+    "name": "Rooftop Duplex",
+    "room_type": "duplex",
+    "base_rate": 810.0,
+    "weekend_rate": 965.0,
+    "status": "operational"
+  },
+  {
+    "id": 76,
+    "hotel_id": 1,
+    "name": "Rooftop Duplex",
+    "room_type": "duplex",
+    "base_rate": 810.0,
+    "weekend_rate": 965.0,
+    "status": "operational"
+  },
+  {
+    "id": 77,
+    "hotel_id": 1,
+    "name": "Rooftop Duplex",
+    "room_type": "duplex",
+    "base_rate": 810.0,
+    "weekend_rate": 965.0,
+    "status": "operational"
+  },
+  {
+    "id": 78,
+    "hotel_id": 1,
+    "name": "Rooftop Duplex",
+    "room_type": "duplex",
+    "base_rate": 810.0,
+    "weekend_rate": 965.0,
+    "status": "operational"
+  },
+  {
+    "id": 79,
+    "hotel_id": 1,
+    "name": "Rooftop Duplex",
+    "room_type": "duplex",
+    "base_rate": 810.0,
+    "weekend_rate": 965.0,
+    "status": "operational"
+  },
+  {
+    "id": 80,
+    "hotel_id": 1,
+    "name": "Rooftop Duplex",
+    "room_type": "duplex",
+    "base_rate": 810.0,
+    "weekend_rate": 965.0,
+    "status": "operational"
+  },
+  {
+    "id": 81,
+    "hotel_id": 1,
+    "name": "Ambassador Suite",
+    "room_type": "ambassador",
+    "base_rate": 1100.0,
+    "weekend_rate": 1320.0,
+    "status": "operational"
+  },
+  {
+    "id": 82,
+    "hotel_id": 1,
+    "name": "Ambassador Suite",
+    "room_type": "ambassador",
+    "base_rate": 1100.0,
+    "weekend_rate": 1320.0,
+    "status": "operational"
+  },
+  {
+    "id": 83,
+    "hotel_id": 1,
+    "name": "Ambassador Suite",
+    "room_type": "ambassador",
+    "base_rate": 1100.0,
+    "weekend_rate": 1320.0,
+    "status": "operational"
+  },
+  {
+    "id": 84,
+    "hotel_id": 1,
+    "name": "Ambassador Suite",
+    "room_type": "ambassador",
+    "base_rate": 1100.0,
+    "weekend_rate": 1320.0,
+    "status": "operational"
+  }
+]

@@ -1,0 +1,47 @@
+[
+  {
+    "id": 1,
+    "name": "The Vitalis Spa",
+    "kind": "spa",
+    "capacity": 30,
+    "utilisation": 42,
+    "opening_hours": "08:00 - 21:00",
+    "notes": "Hydrotherapy pool, sauna, steam, 6 treatment suites. 42% utilisation midweek."
+  },
+  {
+    "id": 2,
+    "name": "Solas Restaurant",
+    "kind": "restaurant",
+    "capacity": 80,
+    "utilisation": 38,
+    "opening_hours": "07:00 - 23:00",
+    "notes": "Michelin-adjacent fine dining. 38% utilisation midweek, higher on weekends."
+  },
+  {
+    "id": 3,
+    "name": "The Aerie Rooftop Bar",
+    "kind": "rooftop_bar",
+    "capacity": 60,
+    "utilisation": 66,
+    "opening_hours": "16:00 - 02:00",
+    "notes": "Signature cocktails with Dublin skyline views."
+  },
+  {
+    "id": 4,
+    "name": "The Cellar Private Dining",
+    "kind": "private_dining",
+    "capacity": 16,
+    "utilisation": 20,
+    "opening_hours": "18:00 - 23:00",
+    "notes": "Chef's table experience, 16 covers."
+  },
+  {
+    "id": 5,
+    "name": "Chauffeur Service",
+    "kind": "chauffeur",
+    "capacity": 2,
+    "utilisation": 55,
+    "opening_hours": "24h",
+    "notes": "Two Mercedes S-Class transfers within Dublin."
+  }
+]

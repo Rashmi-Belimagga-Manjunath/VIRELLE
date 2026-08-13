@@ -19,6 +19,7 @@ reference for every part of the system.
 | [`chat.md`](chat.md) | VIRELLE Command — the chat front door, triggers, session handling |
 | [`frontend.md`](frontend.md) | React views, routing, design system, components, API client |
 | [`setup.md`](setup.md) | Full local setup and run guide |
+| [`synthetic-data.md`](synthetic-data.md) | What is real vs synthetic — the honest data ledger |
 | [`end-to-end.md`](end-to-end.md) | Verified end-to-end results of two real LLM operations |
 
 ## Reference examples

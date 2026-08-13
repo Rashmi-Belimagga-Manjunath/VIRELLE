@@ -20,6 +20,8 @@ async function jsonFetch(path, options) {
 
 export const health = () => jsonFetch("/health");
 export const connections = () => jsonFetch("/connections");
+export const connectionsLive = () => jsonFetch("/connections/live");
+export const livePayload = () => jsonFetch("/live");
 export const organisation = () => jsonFetch("/organisation");
 export const startOperation = (mission) =>
   jsonFetch("/operation/start", { method: "POST", body: JSON.stringify({ mission }) });

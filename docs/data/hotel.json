@@ -1,0 +1,13 @@
+[
+  {
+    "id": 1,
+    "name": "The Virelle Dublin",
+    "brand": "VIRELLE",
+    "profile": "A five-star boutique hotel in Dublin city centre. 84 rooms, premium suites, a luxury spa, fine-dining restaurant, rooftop bar, private dining and chauffeur service. Known for discreet luxury and highly-personalised stays.",
+    "city": "Dublin",
+    "lat": 53.3498,
+    "lon": -6.2603,
+    "room_count": 84,
+    "facilities": "spa,restaurant,rooftop_bar,private_dining,chauffeur,concierge"
+  }
+]

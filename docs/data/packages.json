@@ -1,0 +1,32 @@
+[
+  {
+    "id": 1,
+    "name": "Spa Day Retreat",
+    "description": "Half-day Vitalis spa journey with lunch.",
+    "cost": 120.0,
+    "price": 249.0,
+    "capacity": 10,
+    "sold": 4,
+    "status": "active"
+  },
+  {
+    "id": 2,
+    "name": "Culinary Evening",
+    "description": "Six-course tasting menu in Solas with wine pairing.",
+    "cost": 145.0,
+    "price": 310.0,
+    "capacity": 8,
+    "sold": 5,
+    "status": "active"
+  },
+  {
+    "id": 3,
+    "name": "City Uncovered",
+    "description": "Private half-day Dublin experience with a chauffeur.",
+    "cost": 260.0,
+    "price": 495.0,
+    "capacity": 6,
+    "sold": 2,
+    "status": "active"
+  }
+]
