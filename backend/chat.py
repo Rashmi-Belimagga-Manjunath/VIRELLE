@@ -138,11 +138,15 @@ def _run_concierge_tool(name: str, args: dict) -> str:
         if name == "room_availability":
             days = int(args.get("days", 7))
             r = hotel_db.get_available_inventory(days=days)
-            lines = [
-                f"- {i['stay_date']}: {i['rooms_sold']}/{i['rooms_available']} rooms booked, "
-                f"{i['remaining']} remaining ({i['occupancy']}% occupied)"
-                for i in r.get("inventory", [])
-            ]
+            lines = []
+            for i in r.get("inventory", []):
+                total = i["rooms_total"]
+                avail = i["available"]
+                lines.append(
+                    f"- {i['stay_date']}: {avail}/{total} rooms available "
+                    f"({total - avail} booked, "
+                    f"{round((total - avail) / total * 100)}% occupied)"
+                )
             return "\n".join(lines) or f"No inventory recorded for the next {days} days."
         if name == "live_weather":
             return live_data.summarize_weather(live_data.fetch_weather())
