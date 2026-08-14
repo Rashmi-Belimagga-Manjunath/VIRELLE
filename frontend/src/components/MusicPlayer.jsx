@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Music, Music2, VolumeX } from "lucide-react";
+import { Music, Music2 } from "lucide-react";
 
 const CHORDS = [
   [220.0, 261.63, 329.63],
@@ -11,13 +11,15 @@ const CHORDS = [
 const ROOTS = [0, 1, 2, 3];
 
 export default function MusicPlayer() {
-  const [on, setOn] = useState(false);
+  const [on, setOn] = useState(true);
   const [ready, setReady] = useState(false);
   const ctxRef = useRef(null);
   const masterRef = useRef(null);
   const voicesRef = useRef([]);
   const chordIdxRef = useRef(0);
   const timerRef = useRef(null);
+  const startedRef = useRef(false);
+  const onRef = useRef(true);
 
   const build = useCallback(() => {
     if (ctxRef.current) return;
@@ -47,6 +49,12 @@ export default function MusicPlayer() {
 
     ctxRef.current = ctx;
     masterRef.current = { master, lp };
+  }, []);
+
+  const startScheduler = useCallback(() => {
+    if (startedRef.current || !ctxRef.current) return;
+    const ctx = ctxRef.current;
+    startedRef.current = true;
 
     const playChord = () => {
       if (!ctxRef.current) return;
@@ -106,28 +114,62 @@ export default function MusicPlayer() {
     }, 12000);
   }, []);
 
-  const toggle = () => {
-    if (!on) {
-      build();
-      const ctx = ctxRef.current;
-      if (ctx.state === "suspended") ctx.resume();
-      masterRef.current.master.gain.cancelScheduledValues(ctx.currentTime);
-      masterRef.current.master.gain.setTargetAtTime(0.22, ctx.currentTime, 1.2);
-      setOn(true);
-    } else {
-      const ctx = ctxRef.current;
-      if (ctx) {
-        masterRef.current.master.gain.cancelScheduledValues(ctx.currentTime);
-        masterRef.current.master.gain.setTargetAtTime(0, ctx.currentTime, 0.6);
-      }
-      setOn(false);
-    }
-  };
+  const setMaster = useCallback((level, attack) => {
+    const ctx = ctxRef.current;
+    if (!ctx || !masterRef.current) return;
+    masterRef.current.master.gain.cancelScheduledValues(ctx.currentTime);
+    masterRef.current.master.gain.setTargetAtTime(level, ctx.currentTime, attack);
+  }, []);
+
+  const startAudio = useCallback(() => {
+    if (!ctxRef.current) build();
+    const ctx = ctxRef.current;
+    if (!ctx) return;
+    const go = () => {
+      startScheduler();
+      if (onRef.current) setMaster(0.22, 1.2);
+    };
+    if (ctx.state === "suspended") ctx.resume().then(go).catch(() => {});
+    else go();
+  }, [build, startScheduler, setMaster]);
+
+  const toggle = useCallback(() => {
+    if (!ctxRef.current) build();
+    const ctx = ctxRef.current;
+    if (!ctx) return;
+    const next = !onRef.current;
+    onRef.current = next;
+    setOn(next);
+    const go = () => {
+      startScheduler();
+      setMaster(next ? 0.22 : 0, next ? 1.2 : 0.6);
+    };
+    if (ctx.state === "suspended") ctx.resume().then(go).catch(() => {});
+    else go();
+  }, [build, startScheduler, setMaster]);
+
+  useEffect(() => {
+    const unlock = () => startAudio();
+    document.addEventListener("pointerdown", unlock);
+    document.addEventListener("keydown", unlock);
+    document.addEventListener("touchstart", unlock);
+    startAudio();
+    return () => {
+      document.removeEventListener("pointerdown", unlock);
+      document.removeEventListener("keydown", unlock);
+      document.removeEventListener("touchstart", unlock);
+    };
+  }, [startAudio]);
 
   useEffect(() => () => {
     if (timerRef.current) clearInterval(timerRef.current);
     voicesRef.current.forEach(({ pad, lfo }) => {
-      try { pad.stop(); lfo.stop(); } catch { /* noop */ }
+      try {
+        pad.stop();
+        lfo.stop();
+      } catch {
+        /* noop */
+      }
     });
   }, []);
 
