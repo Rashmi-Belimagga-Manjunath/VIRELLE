@@ -225,9 +225,7 @@ WMO_CODES = {
 }
 
 
-def fetch_weather(lat: float = None, lon: float = None, days: int = 7) -> dict:
-    lat = lat or config.HOTEL_LAT
-    lon = lon or config.HOTEL_LON
+def _weather_from_open_meteo(lat: float, lon: float, days: int) -> dict:
     fetched_at = dt.datetime.now().isoformat(timespec="seconds")
     url = (
         f"{config.WEATHER_URL}?latitude={lat}&longitude={lon}"
@@ -281,6 +279,126 @@ def fetch_weather(lat: float = None, lon: float = None, days: int = 7) -> dict:
         "fetched_at": fetched_at,
         "summary": summary,
     }
+
+
+def _weather_kind(desc: str) -> str:
+    d = (desc or "").strip().lower()
+    if any(k in d for k in ("thunder", "storm")):
+        return "thunderstorm"
+    if "snow" in d or "sleet" in d:
+        return "snow"
+    if "fog" in d or "mist" in d or "haze" in d:
+        return "fog"
+    if "drizzl" in d:
+        return "drizzle"
+    if "rain" in d or "shower" in d:
+        return "rain"
+    if "clear" in d or "sunny" in d:
+        return "clear"
+    if "partly" in d:
+        return "partly"
+    return "cloudy"
+
+
+def _weather_from_wttr(lat: float, lon: float, days: int) -> dict:
+    fetched_at = dt.datetime.now().isoformat(timespec="seconds")
+    url = f"https://wttr.in/{lat},{lon}?format=j1"
+    status = "connected"
+    error = None
+    data = None
+    try:
+        data, _ = _http_json(url)
+    except Exception as exc:  # noqa: BLE001
+        status = "error"
+        error = f"{type(exc).__name__}: {exc}"
+
+    summary = None
+    if data and data.get("current_condition") and data.get("weather"):
+        cur = data["current_condition"][0]
+        desc = ((cur.get("weatherDesc") or [{}])[0]).get("value", "Overcast").strip()
+        days_out = []
+        for day in data["weather"][:days]:
+            hourly = day.get("hourly") or []
+            noon = next((h for h in hourly if h.get("time") in ("1200", "13", "12")), None)
+            rep = noon or (hourly[0] if hourly else {})
+            desc_d = ((rep.get("weatherDesc") or [{}])[0]).get("value", desc).strip()
+            probs = [int(h.get("chanceofrain") or 0) for h in hourly]
+            winds = [int(h.get("windspeedKmph") or 0) for h in hourly]
+            days_out.append({
+                "date": day.get("date"),
+                "max_c": float(day.get("maxtempC") or 0),
+                "min_c": float(day.get("mintempC") or 0),
+                "precip_prob": max(probs) if probs else 0,
+                "wind_max_kmh": max(winds) if winds else 0,
+                "condition": desc_d,
+                "condition_kind": _weather_kind(desc_d),
+            })
+        summary = {
+            "as_of": cur.get("localObsDateTime") or fetched_at,
+            "temperature_c": float(cur.get("temp_C") or 0),
+            "condition": desc,
+            "condition_kind": _weather_kind(desc),
+            "wind_kmh": float(cur.get("windspeedKmph") or 0),
+            "humidity": float(cur.get("humidity") or 0),
+            "forecast": days_out,
+        }
+
+    return {
+        "source": "wttr.in — Weather",
+        "source_url": url,
+        "status": status,
+        "error": error,
+        "fetched_at": fetched_at,
+        "summary": summary,
+    }
+
+
+WEATHER_CACHE = config.DATA_DIR / "weather_cache.json"
+WEATHER_CACHE_TTL_S = 15 * 60
+
+
+def _read_weather_cache():
+    if not WEATHER_CACHE.exists():
+        return None
+    try:
+        cached = json.loads(WEATHER_CACHE.read_text())
+        if time.time() - WEATHER_CACHE.stat().st_mtime <= WEATHER_CACHE_TTL_S:
+            return cached["payload"]
+    except Exception:  # noqa: BLE001
+        pass
+    return None
+
+
+def _write_weather_cache(payload: dict) -> None:
+    try:
+        WEATHER_CACHE.write_text(json.dumps({"payload": payload}))
+    except Exception:  # noqa: BLE001
+        pass
+
+
+def fetch_weather(lat: float = None, lon: float = None, days: int = 7) -> dict:
+    """Live weather for the hotel, cached 15 min, with a keyless fallback.
+
+    Open-Meteo is queried first; if it is rate-limited or unreachable, a
+    second keyless provider (wttr.in) is used so the demo never dead-ends.
+    """
+    lat = lat or config.HOTEL_LAT
+    lon = lon or config.HOTEL_LON
+    cached = _read_weather_cache()
+    if cached is not None:
+        cached["cached"] = True
+        return cached
+
+    result = _weather_from_open_meteo(lat, lon, days)
+    if result["status"] == "connected":
+        _write_weather_cache(result)
+        return result
+
+    fallback = _weather_from_wttr(lat, lon, days)
+    if fallback["status"] == "connected":
+        _write_weather_cache(fallback)
+        return fallback
+    return result
 
 
 # --------------------------------------------------------------------------
