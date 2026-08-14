@@ -254,15 +254,18 @@ export default function Landing({ navigate, onOperate }) {
             </span>
           </motion.div>
 
-          <h1 className="max-w-5xl text-center font-serif leading-[1.04] text-cream">
-            <Word stagger delay={0.1}>From</Word> <Word stagger delay={0.18}>live</Word>{" "}
-            <Word stagger delay={0.26}>signals</Word>
+          <h1 className="max-w-6xl text-center font-serif leading-[1.04] text-cream text-[clamp(2.4rem,6vw,5.4rem)]">
+            <Word stagger delay={0.1}>From</Word>{" "}
+            <Word stagger delay={0.2}>live</Word>{" "}
+            <span className="shine-text headline-glow">
+              <Word stagger delay={0.3}>signals</Word>
+            </span>
             <br />
-            <Word stagger delay={0.4}>to</Word>{" "}
-            <span className="gold-text">
-              <Word stagger delay={0.5}>exceptional</Word>
-            </span>{" "}
-            <Word stagger delay={0.58}>experiences.</Word>
+            <Word stagger delay={0.45}>to</Word>{" "}
+            <span className="shine-text headline-glow">
+              <Word stagger delay={0.55}>exceptional</Word>{" "}
+              <Word stagger delay={0.65}>experiences.</Word>
+            </span>
           </h1>
 
           <motion.p
@@ -690,10 +693,10 @@ function Testimonials() {
 function Word({ children, delay }) {
   return (
     <motion.span
-      className="inline-block"
-      initial={{ opacity: 0, y: "0.6em", filter: "blur(6px)" }}
-      animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-      transition={{ delay, duration: 0.8, ease }}
+      className="inline-block will-change-transform"
+      initial={{ opacity: 0, y: "0.75em", scale: 0.94, filter: "blur(14px)" }}
+      animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
+      transition={{ delay, duration: 0.95, ease }}
     >
       {children}
     </motion.span>

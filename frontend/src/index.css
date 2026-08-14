@@ -55,6 +55,35 @@ body {
   color: transparent;
 }
 
+.shine-text {
+  background: linear-gradient(
+    100deg,
+    #f7e8c3 0%,
+    #e2c078 18%,
+    #c9a76b 34%,
+    #f8ebc0 52%,
+    #c9a76b 70%,
+    #e2c078 84%,
+    #f7e8c3 100%
+  );
+  background-size: 240% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: shine-sweep 4.5s ease-in-out infinite;
+}
+
+@keyframes shine-sweep {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.headline-glow {
+  filter: drop-shadow(0 0 16px rgba(201, 167, 107, 0.32))
+    drop-shadow(0 2px 28px rgba(0, 0, 0, 0.65));
+}
+
 .aurora {
   position: absolute;
   border-radius: 50%;
