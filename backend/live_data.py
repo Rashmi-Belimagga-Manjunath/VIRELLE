@@ -10,7 +10,9 @@ import datetime as dt
 import io
 import json
 import math
+import re
 import ssl
+import time
 import urllib.request
 
 import certifi
@@ -40,6 +42,32 @@ def _http_bytes(url: str) -> bytes:
 # Events - Fáilte Ireland Open Data (official Irish tourism events feed)
 # --------------------------------------------------------------------------
 
+EVENTS_CACHE = config.DATA_DIR / "events_cache.json"
+EVENTS_CACHE_TTL_S = 6 * 3600
+EVENTS_FAIL_TTL_S = 30 * 60
+
+
+def _read_events_cache():
+    if not EVENTS_CACHE.exists():
+        return None
+    try:
+        cached = json.loads(EVENTS_CACHE.read_text())
+        age = time.time() - EVENTS_CACHE.stat().st_mtime
+        max_age = EVENTS_CACHE_TTL_S if cached.get("ok") else EVENTS_FAIL_TTL_S
+        if age <= max_age:
+            return cached["payload"]
+    except Exception:  # noqa: BLE001
+        pass
+    return None
+
+
+def _write_events_cache(ok: bool, payload: dict) -> None:
+    try:
+        EVENTS_CACHE.write_text(json.dumps({"ok": ok, "payload": payload}))
+    except Exception:  # noqa: BLE001
+        pass
+
+
 def _parse_fi_date(value: str):
     value = (value or "").strip()
     for fmt in ("%d/%m/%Y", "%Y-%m-%d", "%d-%m-%Y"):
@@ -50,8 +78,39 @@ def _parse_fi_date(value: str):
     return None
 
 
+def _quota_reset_hint(exc) -> str | None:
+    """Extract a human 'replenished in H:MM:SS' hint from an HTTPError body."""
+    body = ""
+    if getattr(exc, "code", None) == 403:
+        try:
+            body = exc.read().decode("utf-8", "ignore")
+        except Exception:  # noqa: BLE001
+            body = ""
+    m = re.search(r"replenished in (\d+):(\d+):(\d+)", body)
+    if not m:
+        return None
+    h, mm = int(m.group(1)), int(m.group(2))
+    if not h and not mm:
+        return "a moment"
+    parts = []
+    if h:
+        parts.append(f"{h} hour{'s' if h != 1 else ''}")
+    if mm:
+        parts.append(f"{mm} minute{'s' if mm != 1 else ''}")
+    return " ".join(parts)
+
+
 def fetch_events(days_ahead: int = 14, county: str | None = "Dublin") -> dict:
-    """Fetch live events from the Fáilte Ireland open data events API."""
+    """Fetch live events from the Fáilte Ireland open data events API.
+
+    Responses are cached (6h on success, 30min on failure) so the free
+    bandwidth quota of the upstream feed is used sparingly.
+    """
+    cached = _read_events_cache()
+    if cached is not None:
+        cached["cached"] = True
+        return cached
+
     fetched_at = dt.datetime.now().isoformat(timespec="seconds")
     status = "connected"
     error = None
@@ -92,9 +151,16 @@ def fetch_events(days_ahead: int = 14, county: str | None = "Dublin") -> dict:
             error = "No events found for the requested window."
     except Exception as exc:  # noqa: BLE001
         status = "error"
-        error = f"{type(exc).__name__}: {exc}"
+        hint = _quota_reset_hint(exc)
+        if hint:
+            error = (
+                "The Fáilte Ireland live events feed is temporarily rate-limited "
+                f"(bandwidth quota). Retry available in ~{hint}."
+            )
+        else:
+            error = f"{type(exc).__name__}: {exc}"
 
-    return {
+    payload = {
         "source": config.EVENTS_SOURCE_NAME,
         "source_url": config.EVENTS_URL,
         "status": status,
@@ -102,7 +168,10 @@ def fetch_events(days_ahead: int = 14, county: str | None = "Dublin") -> dict:
         "fetched_at": fetched_at,
         "count": len(events),
         "events": events[:200],
+        "cached": False,
     }
+    _write_events_cache(status == "connected", payload)
+    return payload
 
 
 def _to_float(value):
