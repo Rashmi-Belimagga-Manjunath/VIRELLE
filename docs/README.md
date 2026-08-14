@@ -21,6 +21,7 @@ reference for every part of the system.
 | [`setup.md`](setup.md) | Full local setup and run guide |
 | [`synthetic-data.md`](synthetic-data.md) | What is real vs synthetic — the honest data ledger |
 | [`end-to-end.md`](end-to-end.md) | Verified end-to-end results of two real LLM operations |
+| [`assessment-guide.md`](assessment-guide.md) | How to present VIRELLE to an assessor — demo script, talking points, likely questions |
 
 ## Reference examples
 

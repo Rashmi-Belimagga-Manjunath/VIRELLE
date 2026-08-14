@@ -54,6 +54,15 @@ export default function App() {
     <div className="relative min-h-screen bg-ink-950 text-cream font-sans">
       <Backdrop />
       <Nav view={view} navigate={navigate} provider={provider} />
+      {!provider.ok && (
+        <div className="relative z-40 border-b border-amber-500/20 bg-amber-500/10 px-6 py-2.5 text-center">
+          <p className="text-[12px] text-amber-200">
+            <span className="font-mono text-[10px] tracking-widest">STATIC PREVIEW · </span>
+            Live features (chat, data, booking) need the app server. Open this repo on GitHub →
+            <span className="font-mono"> Code → Codespaces</span> for the full live experience.
+          </p>
+        </div>
+      )}
       <AnimatePresence mode="wait">
         <motion.main
           key={view}
@@ -109,6 +118,14 @@ function Nav({ view, navigate, provider }) {
         </button>
 
         <nav className="hidden items-center gap-7 md:flex">
+          <button
+            onClick={() => navigate("landing")}
+            className={`text-[13px] tracking-wide transition-colors ${
+              view === "landing" ? "text-gold-300" : "text-cream/50 hover:text-cream"
+            }`}
+          >
+            Home
+          </button>
           {NAV_ITEMS.filter((n) => n.id !== "landing").map((n) => (
             <button
               key={n.id}
@@ -142,6 +159,14 @@ function Nav({ view, navigate, provider }) {
 
       {/* mobile nav */}
       <div className="flex gap-4 overflow-x-auto px-6 pb-3 md:hidden">
+        <button
+          onClick={() => navigate("landing")}
+          className={`whitespace-nowrap text-[13px] ${
+            view === "landing" ? "text-gold-300" : "text-cream/50"
+          }`}
+        >
+          Home
+        </button>
         {NAV_ITEMS.filter((n) => n.id !== "landing").map((n) => (
           <button
             key={n.id}
