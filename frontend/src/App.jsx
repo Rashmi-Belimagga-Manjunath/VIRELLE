@@ -12,6 +12,8 @@ import Executive from "./views/Executive.jsx";
 import Team from "./views/Team.jsx";
 import ChatWidget from "./components/ChatWidget.jsx";
 import MusicPlayer from "./components/MusicPlayer.jsx";
+import CursorFX from "./components/CursorFX.jsx";
+import ScrollProgress from "./components/ScrollProgress.jsx";
 
 function readHash() {
   const h = window.location.hash.replace(/^#\/?/, "");
@@ -63,6 +65,8 @@ export default function App() {
   return (
     <div className="relative min-h-screen bg-ink-950 text-cream font-sans">
       <Backdrop />
+      <ScrollProgress />
+      <CursorFX />
       <Nav view={view} navigate={navigate} provider={provider} />
       {!provider.ok && (
         <div className="relative z-40 border-b border-amber-500/20 bg-amber-500/10 px-6 py-2.5 text-center">

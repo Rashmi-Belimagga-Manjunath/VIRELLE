@@ -22,6 +22,7 @@ TABLES = [
     "historical_performance",
     "packages",
     "bookings",
+    "contact_inquiries",
 ]
 
 
@@ -31,7 +32,10 @@ def main() -> None:
     conn.row_factory = sqlite3.Row
     manifest = {}
     for table in TABLES:
-        rows = [dict(r) for r in conn.execute(f"SELECT * FROM {table}")]
+        try:
+            rows = [dict(r) for r in conn.execute(f"SELECT * FROM {table}")]
+        except sqlite3.OperationalError:
+            rows = []
         dest = OUT_DIR / f"{table}.json"
         with open(dest, "w", encoding="utf-8") as f:
             json.dump(rows, f, ensure_ascii=False, indent=2, default=str)

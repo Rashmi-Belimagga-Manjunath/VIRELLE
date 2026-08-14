@@ -31,6 +31,8 @@ export const latestProduct = () => jsonFetch("/product/latest");
 export const createChatSession = () => jsonFetch("/chat", { method: "POST" });
 export const bookProduct = (payload) =>
   jsonFetch("/product/book", { method: "POST", body: JSON.stringify(payload) });
+export const submitContact = (payload) =>
+  jsonFetch("/contact", { method: "POST", body: JSON.stringify(payload) });
 
 /** POST-based SSE reader for the chat stream. */
 export async function chatStream(sessionId, message, onEvent) {

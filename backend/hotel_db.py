@@ -79,6 +79,14 @@ CREATE TABLE IF NOT EXISTS inventory (
     category TEXT,
     recomputed_at TEXT
 );
+CREATE TABLE IF NOT EXISTS contact_inquiries (
+    id INTEGER PRIMARY KEY,
+    name TEXT NOT NULL,
+    email TEXT NOT NULL,
+    subject TEXT,
+    message TEXT,
+    created_at TEXT
+);
 """
 
 
@@ -217,3 +225,15 @@ def recent_bookings(limit: int = 20) -> dict:
         rows = [dict(r) for r in c.execute(
             "SELECT * FROM bookings ORDER BY id DESC LIMIT ?", (limit,))]
         return {"bookings": rows}
+
+
+def create_contact_inquiry(name: str, email: str, subject: str, message: str) -> dict:
+    with _conn() as c:
+        cur = c.execute(
+            "INSERT INTO contact_inquiries (name, email, subject, message, created_at) "
+            "VALUES (?,?,?,?,?)",
+            (name, email, subject, message, datetime.now().isoformat()),
+        )
+        last_id = cur.lastrowid
+    return {"id": last_id, "status": "received",
+            "received_at": datetime.now().isoformat(timespec="seconds")}

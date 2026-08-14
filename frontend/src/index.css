@@ -190,3 +190,45 @@ body {
 input, textarea, select {
   outline: none;
 }
+
+/* ---------- luxury motion cursor ---------- */
+@media (hover: hover) and (pointer: fine) {
+  * { cursor: none !important; }
+  input, textarea, select, [contenteditable="true"] { cursor: text !important; }
+}
+.cursor-dot {
+  position: fixed; left: 0; top: 0;
+  width: 6px; height: 6px; margin: -3px 0 0 -3px;
+  border-radius: 999px;
+  background: #ecd5a0;
+  box-shadow: 0 0 12px rgba(201, 167, 107, 0.9), 0 0 28px rgba(201, 167, 107, 0.5);
+  will-change: transform;
+}
+.cursor-ring {
+  position: fixed; left: 0; top: 0;
+  width: 36px; height: 36px; margin: -18px 0 0 -18px;
+  border-radius: 999px;
+  border: 1px solid rgba(201, 167, 107, 0.45);
+  background: rgba(201, 167, 107, 0.05);
+  will-change: transform;
+}
+.cursor-glow {
+  position: fixed; left: 0; top: 0;
+  width: 260px; height: 260px; margin: -130px 0 0 -130px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(201, 167, 107, 0.13) 0%, rgba(201, 167, 107, 0.04) 42%, transparent 70%);
+  will-change: transform;
+}
+
+/* ---------- section reveal helper ---------- */
+.section-rule {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(201, 167, 107, 0.4), transparent);
+}
+
+@keyframes spin-slow {
+  to { transform: rotate(360deg); }
+}
+.spin-slow {
+  animation: spin-slow 14s linear infinite;
+}

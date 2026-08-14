@@ -3,7 +3,8 @@ import { motion } from "framer-motion";
 import { Quote, ArrowRight, RotateCcw } from "lucide-react";
 import { TEAM, STAGES } from "../constants.jsx";
 import CinematicImage from "../components/CinematicImage.jsx";
-import { PORTRAITS } from "../components/Images.jsx";
+import SectionHero from "../components/SectionHero.jsx";
+import { GALLERY, PORTRAITS } from "../components/Images.jsx";
 
 const FLIP_3D = {
   transformStyle: "preserve-3d",
@@ -145,16 +146,16 @@ function TeamCard({ agent, stage, portrait, navigate }) {
 
 export default function Team({ navigate }) {
   return (
-    <div className="relative z-10 mx-auto max-w-6xl px-6 py-12">
-      <div className="text-center">
-        <p className="font-mono text-[11px] tracking-widest2 text-gold-500/80">THE VIRELLE TEAM</p>
-        <h1 className="mt-2 font-serif text-4xl text-cream md:text-5xl">Five specialists. One organisation.</h1>
-        <p className="mx-auto mt-3 max-w-xl text-sm text-cream/55">
-          Every operation passes through the team in sequence — each agent
-          hands its work to the next, and evidence flows through all of them.
-          Hover a card to meet the agent behind the stage.
-        </p>
-      </div>
+    <>
+      <SectionHero
+        chapter="Chapter 01 · The Organisation"
+        kicker="THE VIRELLE TEAM"
+        title="Five specialists. One organisation."
+        sub="Every operation passes through the team in sequence — each agent hands its work to the next, and evidence flows through all of them. Hover a card to meet the agent behind the stage."
+        image={GALLERY.lobby.src}
+        imageAlt="The VIRELLE team"
+      />
+      <div className="relative z-10 mx-auto max-w-6xl px-6 py-12">
 
       <div className="mt-14 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {TEAM.map((a, i) => (
@@ -191,6 +192,7 @@ export default function Team({ navigate }) {
           </button>
         </motion.div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

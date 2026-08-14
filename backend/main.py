@@ -218,6 +218,23 @@ async def latest_product():
     return {"product": None}
 
 
+class ContactRequest(BaseModel):
+    name: str
+    email: str
+    subject: str = ""
+    message: str = ""
+
+
+@app.post("/api/contact")
+async def contact(req: ContactRequest):
+    if not req.name.strip() or not req.email.strip() or not req.message.strip():
+        raise HTTPException(status_code=400, detail="Name, email and message are required.")
+    import hotel_db
+    inquiry = hotel_db.create_contact_inquiry(
+        req.name.strip(), req.email.strip(), req.subject.strip(), req.message.strip())
+    return {"inquiry": inquiry}
+
+
 @app.post("/api/chat")
 async def chat_stream_endpoint():
     sid = chat._new_session()

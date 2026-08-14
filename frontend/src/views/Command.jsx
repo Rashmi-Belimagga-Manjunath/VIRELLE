@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Send, Sparkles, Bot, User } from "lucide-react";
 import { createChatSession, chatStream } from "../api.js";
 import { MISSION_SUGGESTIONS } from "../constants.jsx";
+import { GALLERY } from "../components/Images.jsx";
+import SectionHero from "../components/SectionHero.jsx";
 
 const OPENING =
   "Good evening. What would you like VIRELLE to solve?\n\nGive me a business objective, and I'll coordinate the organisation from research to decision.";
@@ -86,16 +88,16 @@ export default function Command({ onOperate }) {
   };
 
   return (
-    <div className="relative z-10 mx-auto max-w-4xl px-6 py-12">
-      <div className="text-center">
-        <p className="font-mono text-[11px] tracking-widest2 text-gold-500/80">VIRELLE COMMAND</p>
-        <h1 className="mt-2 font-serif text-4xl text-cream md:text-5xl">
-          Your interface to the organisation.
-        </h1>
-        <p className="mt-3 text-sm text-cream/50">
-          One conversation. Five specialists. A complete business operation.
-        </p>
-      </div>
+    <>
+      <SectionHero
+        chapter="Chapter 01 · The Front Door"
+        kicker="VIRELLE COMMAND"
+        title="Your interface to the organisation."
+        sub="One conversation. Five specialists. A complete business operation."
+        image={GALLERY.lobby.src}
+        imageAlt="VIRELLE Command"
+      />
+      <div className="relative z-10 mx-auto max-w-4xl px-6 py-12">
 
       <div className="glass relative mt-10 flex h-[70vh] flex-col overflow-hidden rounded-3xl">
         {/* chat header */}
@@ -170,7 +172,8 @@ export default function Command({ onOperate }) {
           </p>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }
 

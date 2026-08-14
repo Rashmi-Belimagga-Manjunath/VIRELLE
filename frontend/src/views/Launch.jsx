@@ -11,22 +11,24 @@ import {
   ArrowUpRight,
 } from "lucide-react";
 import { useOperation } from "../hooks/useOperation.js";
+import { GALLERY } from "../components/Images.jsx";
+import SectionHero from "../components/SectionHero.jsx";
 
 export default function Launch({ opId }) {
   const { op } = useOperation(opId);
   const campaign = op.campaign || null;
 
   return (
-    <div className="relative z-10 mx-auto max-w-6xl px-6 py-12">
-      <div className="text-center">
-        <p className="font-mono text-[11px] tracking-widest2 text-gold-500/80">VIRELLE LAUNCH</p>
-        <h1 className="mt-2 font-serif text-4xl text-cream md:text-5xl">The go-to-market</h1>
-        <p className="mx-auto mt-3 max-w-xl text-sm text-cream/55">
-          The campaign Amelia Bennett crafted to turn the product into demand —
-          grounded in the real product, price and stay date.
-        </p>
-      </div>
-
+    <>
+      <SectionHero
+        chapter="Chapter 05 · The Launch"
+        kicker="VIRELLE LAUNCH"
+        title="The go-to-market"
+        sub="The campaign Amelia Bennett crafted to turn the product into demand — grounded in the real product, price and stay date."
+        image={GALLERY.concert.src}
+        imageAlt="Live launch campaign"
+      />
+      <div className="relative z-10 mx-auto max-w-6xl px-6 py-12">
       {!campaign ? (
         <div className="glass mt-12 rounded-2xl p-12 text-center">
           <Megaphone size={26} className="mx-auto text-gold-500/60" />
@@ -154,6 +156,7 @@ export default function Launch({ opId }) {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 }

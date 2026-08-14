@@ -1,5 +1,13 @@
 import React, { useEffect, useRef, useState } from "react";
-import { motion, useMotionValue, useSpring, useTransform, AnimatePresence } from "framer-motion";
+import {
+  motion,
+  useMotionValue,
+  useSpring,
+  useTransform,
+  useScroll,
+  useInView,
+  AnimatePresence,
+} from "framer-motion";
 import {
   ArrowRight,
   Activity,
@@ -15,12 +23,19 @@ import {
   Star,
   ChevronLeft,
   ChevronRight,
+  Send,
+  Mail,
+  Phone,
+  MapPin,
+  Clock,
+  CheckCircle2,
+  Loader2,
 } from "lucide-react";
 import { TEAM, STAGES, MISSION_SUGGESTIONS } from "../constants.jsx";
 import { GALLERY, WEATHER_IMAGES, PORTRAITS } from "../components/Images.jsx";
 import CinematicImage from "../components/CinematicImage.jsx";
 import LiveWeatherCard from "../components/LiveWeatherCard.jsx";
-import { livePayload } from "../api.js";
+import { livePayload, submitContact } from "../api.js";
 
 const TESTIMONIALS = [
   {
@@ -62,6 +77,16 @@ const TESTIMONIAL_VARIANTS = {
   center: { x: 0, opacity: 1 },
   exit: (d) => ({ x: d * -70, opacity: 0 }),
 };
+
+const CHAPTERS = [
+  { id: "signal", label: "The Signal" },
+  { id: "city", label: "The City" },
+  { id: "stay", label: "The House" },
+  { id: "chain", label: "The Chain" },
+  { id: "method", label: "The Method" },
+  { id: "proof", label: "Proof" },
+  { id: "contact", label: "Contact" },
+];
 
 function ParticleField() {
   const ref = useRef(null);
@@ -159,9 +184,11 @@ export default function Landing({ navigate, onOperate }) {
 
   return (
     <div className="relative">
+      <StoryRail />
       {/* ================= HERO — MOTION HOTEL BANNER ================= */}
       <section
         ref={heroRef}
+        id="signal"
         onMouseMove={onHeroMove}
         onMouseLeave={() => {
           mx.set(0);
@@ -254,6 +281,15 @@ export default function Landing({ navigate, onOperate }) {
             </span>
           </motion.div>
 
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4, duration: 0.8 }}
+            className="mb-6 font-mono text-[10px] tracking-[0.5em] text-cream/45"
+          >
+            EST. 2026 · DUBLIN
+          </motion.p>
+
           <h1 className="max-w-6xl text-center font-serif leading-[1.04] text-cream text-[clamp(2.4rem,6vw,5.4rem)]">
             <Word stagger delay={0.1}>From</Word>{" "}
             <Word stagger delay={0.2}>live</Word>{" "}
@@ -337,7 +373,7 @@ export default function Landing({ navigate, onOperate }) {
       </div>
 
       {/* ================= LIVE WEATHER ================= */}
-      <section className="relative z-10 mx-auto max-w-6xl px-6 py-14">
+      <section id="city" className="relative z-10 mx-auto max-w-6xl px-6 py-14">
         <SectionHeading
           kicker="LIVE FROM DUBLIN"
           title="The city, right now."
@@ -399,79 +435,38 @@ export default function Landing({ navigate, onOperate }) {
       {/* ================= STATS ================= */}
       <section className="relative z-10 mx-auto grid max-w-6xl grid-cols-2 gap-6 px-6 py-16 md:grid-cols-4">
         {[
-          { v: "5", l: "Specialised AI agents", icon: Workflow },
-          { v: "3", l: "Live external sources", icon: CloudSun },
-          { v: "12", l: "MCP hotel operations tools", icon: Database },
-          { v: "1", l: "Final business decision", icon: Activity },
+          { v: 5, l: "Specialised AI agents", icon: Workflow },
+          { v: 3, l: "Live external sources", icon: CloudSun },
+          { v: 12, l: "MCP hotel operations tools", icon: Database },
+          { v: 1, l: "Final business decision", icon: Activity },
         ].map((s, i) => (
-          <motion.div
-            key={s.l}
-            initial={{ opacity: 0, y: 24 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-60px" }}
-            transition={{ delay: i * 0.08, duration: 0.6, ease }}
-            className="glass rounded-2xl p-6 text-center"
-          >
-            <s.icon size={18} className="mx-auto text-gold-400" />
-            <p className="mt-3 font-serif text-4xl text-cream">{s.v}</p>
-            <p className="mt-1 text-xs tracking-wide text-cream/50">{s.l}</p>
-          </motion.div>
+          <Stat key={s.l} value={s.v} label={s.l} icon={s.icon} delay={i * 0.08} />
         ))}
       </section>
 
+      {/* ================= INTERLUDE · THE SIGNAL ================= */}
+      <Interlude
+        image={GALLERY.rooftop.src}
+        kicker="THE SIGNAL"
+        title="Every operation starts with a signal."
+        sub="A Friday evening. A sold-out event across the Liffey. 31 unsold rooms upstairs. The organisation wakes up."
+      />
+
+      {/* ================= THE HOUSE · GALLERY ================= */}
+      <GalleryShowcase />
+
       {/* ================= THE CHAIN ================= */}
-      <section className="relative z-10 mx-auto max-w-6xl px-6 py-14">
+      <section id="chain" className="relative z-10 mx-auto max-w-6xl px-6 py-14">
         <SectionHeading
           kicker="ONE UNBROKEN CHAIN"
           title="Five professionals. One organisation. Zero hand-offs lost."
           sub="Each agent's output becomes the next agent's input. The chain cannot be skipped — research before design, design before build, build before demand, and everything before the final decision."
         />
-        <div className="mt-12 grid gap-5 md:grid-cols-5">
-          {TEAM.map((t, i) => (
-            <motion.div
-              key={t.id}
-              initial={{ opacity: 0, y: 26 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-60px" }}
-              transition={{ delay: i * 0.1, duration: 0.6, ease }}
-              className="group relative overflow-hidden rounded-2xl border p-6 transition-colors hover:-translate-y-1"
-              style={{ borderColor: `${t.color}22`, background: t.accent }}
-            >
-              <span className="font-mono text-[11px]" style={{ color: t.color }}>
-                {t.number}
-              </span>
-              <div
-                className="relative mt-4 h-14 w-14 overflow-hidden rounded-full transition-transform group-hover:scale-110"
-                style={{ boxShadow: `0 0 0 3px ${t.color}33, 0 0 24px -6px ${t.color}88` }}
-              >
-                <img
-                  src={PORTRAITS[i].src}
-                  alt={PORTRAITS[i].alt}
-                  className="h-full w-full object-cover"
-                  loading="lazy"
-                />
-              </div>
-                <h3 className="mt-4 font-serif text-xl text-cream">{t.name}</h3>
-                <p className="mt-0.5 text-[11px] tracking-wide text-cream/45">{t.title}</p>
-                <p className="mt-3 text-sm italic leading-relaxed text-cream/60">
-                  "{t.philosophy}"
-                </p>
-                <p className="mt-4 font-mono text-[10px] uppercase tracking-widest" style={{ color: t.color }}>
-                  {STAGES[i].label}
-                </p>
-                {i < 4 && (
-                  <ArrowRight
-                    size={14}
-                    className="absolute right-4 top-6 text-cream/30"
-                  />
-                )}
-              </motion.div>
-          ))}
-        </div>
+        <ChainIndex />
       </section>
 
       {/* ================= HOW IT WORKS ================= */}
-      <section className="relative z-10 mx-auto max-w-6xl px-6 py-14">
+      <section id="method" className="relative z-10 mx-auto max-w-6xl px-6 py-14">
         <SectionHeading
           kicker="HOW AN OPERATION RUNS"
           title="Give the organisation a mission."
@@ -511,6 +506,14 @@ export default function Landing({ navigate, onOperate }) {
         </div>
       </section>
 
+      {/* ================= INTERLUDE · THE METHOD ================= */}
+      <Interlude
+        image={GALLERY.room.src}
+        kicker="THE METHOD"
+        title="One conversation. Five specialists."
+        sub="Research, design, build, communicate, decide — a chain that cannot be skipped, and evidence that cannot be faked."
+      />
+
       {/* ================= CTA ================= */}
       <section className="relative z-10 mx-auto max-w-5xl px-6 py-16 text-center">
         <motion.div
@@ -549,6 +552,12 @@ export default function Landing({ navigate, onOperate }) {
 
       {/* ================= TESTIMONIALS ================= */}
       <Testimonials />
+
+      {/* ================= QUESTIONS ================= */}
+      <Faq />
+
+      {/* ================= CONTACT ================= */}
+      <Contact />
     </div>
   );
 }
@@ -574,7 +583,7 @@ function Testimonials() {
   const t = TESTIMONIALS[i];
 
   return (
-    <section className="relative z-10 mx-auto max-w-5xl px-6 py-16">
+    <section id="proof" className="relative z-10 mx-auto max-w-5xl px-6 py-16">
       <SectionHeading
         kicker="GUEST STORIES"
         title="What guests say about The Virelle"
@@ -703,6 +712,297 @@ function Word({ children, delay }) {
   );
 }
 
+function Stat({ value, label, icon: Icon, delay }) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: "-60px" });
+  const [display, setDisplay] = useState(0);
+
+  useEffect(() => {
+    if (!inView) return;
+    const duration = 900;
+    const start = performance.now();
+    let raf;
+    const tick = (now) => {
+      const p = Math.min((now - start) / duration, 1);
+      setDisplay(Math.round(value * (1 - Math.pow(1 - p, 3))));
+      if (p < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [inView, value]);
+
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 24 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-60px" }}
+      transition={{ delay, duration: 0.6, ease }}
+      className="glass rounded-2xl p-6 text-center"
+    >
+      <Icon size={18} className="mx-auto text-gold-400" />
+      <p className="mt-3 font-serif text-4xl text-cream tabular-nums">{display}</p>
+      <p className="mt-1 text-xs tracking-wide text-cream/50">{label}</p>
+    </motion.div>
+  );
+}
+
+function Interlude({ image, kicker, title, sub }) {
+  const ref = useRef(null);
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
+  const y = useTransform(scrollYProgress, [0, 1], [70, -70]);
+  const scale = useTransform(scrollYProgress, [0, 0.5, 1], [0.9, 1.02, 1.08]);
+  const opacity = useTransform(scrollYProgress, [0, 0.12, 0.85, 1], [0, 1, 1, 0]);
+
+  return (
+    <section ref={ref} className="relative z-10 h-[130vh]">
+      <div className="sticky top-0 flex h-screen items-center justify-center overflow-hidden">
+        <motion.div style={{ y, scale }} className="absolute inset-0">
+          <img src={image} alt="" className="kenburns h-full w-full object-cover" loading="lazy" />
+        </motion.div>
+        <div className="absolute inset-0 bg-ink-950/80" />
+        <div className="aurora h-96 w-96 bg-gold-500/10" />
+        <motion.div style={{ opacity }} className="relative z-10 max-w-3xl px-6 text-center">
+          <p className="font-mono text-[11px] tracking-widest2 text-gold-400">{kicker}</p>
+          <h2 className="mt-4 font-serif text-4xl leading-tight text-cream md:text-6xl">{title}</h2>
+          <p className="mx-auto mt-5 max-w-xl text-sm leading-relaxed text-cream/60">{sub}</p>
+        </motion.div>
+      </div>
+    </section>
+  );
+}
+
+function StoryRail() {
+  const [active, setActive] = useState("signal");
+
+  useEffect(() => {
+    const obs = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) if (e.isIntersecting) setActive(e.target.id);
+      },
+      { rootMargin: "-40% 0px -50% 0px" }
+    );
+    for (const c of CHAPTERS) {
+      const el = document.getElementById(c.id);
+      if (el) obs.observe(el);
+    }
+    return () => obs.disconnect();
+  }, []);
+
+  return (
+    <nav className="fixed left-7 top-1/2 z-30 hidden -translate-y-1/2 flex-col gap-6 xl:flex">
+      {CHAPTERS.map((c) => (
+        <button
+          key={c.id}
+          onClick={() => document.getElementById(c.id)?.scrollIntoView({ behavior: "smooth" })}
+          className="group flex items-center gap-3 text-left"
+        >
+          <span
+            className={`h-px transition-all duration-300 ${
+              active === c.id
+                ? "w-10 bg-gold-400"
+                : "w-5 bg-cream/25 group-hover:w-8 group-hover:bg-gold-500/50"
+            }`}
+          />
+          <span
+            className={`font-mono text-[10px] tracking-widest transition-colors ${
+              active === c.id ? "text-gold-300" : "text-cream/40 group-hover:text-cream/70"
+            }`}
+          >
+            {c.label.toUpperCase()}
+          </span>
+        </button>
+      ))}
+    </nav>
+  );
+}
+
+const CONTACT_INFO = [
+  { icon: MapPin, label: "ADDRESS", value: "The Virelle Dublin, 4 College Green, Dublin 2, Ireland" },
+  { icon: Phone, label: "CONCIERGE", value: "+353 1 555 0147" },
+  { icon: Mail, label: "EMAIL", value: "concierge@virelle.ie" },
+  { icon: Clock, label: "HOURS", value: "Concierge · 24/7 — Command deck · always live" },
+];
+
+function Contact() {
+  const [form, setForm] = useState({ name: "", email: "", subject: "", message: "" });
+  const [status, setStatus] = useState("idle");
+  const [err, setErr] = useState("");
+
+  const set = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.value }));
+
+  const submit = async (e) => {
+    e.preventDefault();
+    setStatus("sending");
+    setErr("");
+    try {
+      await submitContact(form);
+      setStatus("ok");
+      setForm({ name: "", email: "", subject: "", message: "" });
+    } catch (ex) {
+      setStatus("error");
+      setErr(ex.message || "Could not reach the concierge. Try again.");
+    }
+  };
+
+  const inputCls =
+    "w-full rounded-xl border border-cream/10 bg-ink-950/50 px-4 py-3 text-sm text-cream placeholder:text-cream/30 outline-none transition-colors focus:border-gold-500/40";
+
+  return (
+    <section id="contact" className="relative z-10 mx-auto max-w-6xl px-6 py-16">
+      <SectionHeading
+        kicker="CONTACT THE CONCIERGE"
+        title="Begin a conversation."
+        sub="A question, a stay, or a mission for the organisation — the concierge desk and the command deck both read every message. Live, as always."
+      />
+      <div className="mt-12 grid gap-6 md:grid-cols-2">
+        <motion.div
+          initial={{ opacity: 0, x: -24 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: true, margin: "-60px" }}
+          transition={{ duration: 0.7, ease }}
+          className="glass rounded-3xl p-8"
+        >
+          <div className="flex items-center gap-2">
+            <span className="h-2 w-2 rounded-full bg-emerald-400 pulse-dot" />
+            <span className="font-mono text-[10px] tracking-widest text-emerald-300">
+              THE CONCIERGE IS ON DUTY
+            </span>
+          </div>
+          <h3 className="mt-5 font-serif text-3xl text-cream">The Virelle Dublin</h3>
+          <p className="mt-2 text-sm leading-relaxed text-cream/55">
+            Centre of the city, one block from the river. If the night doesn't
+            end when the event does — this is where it begins.
+          </p>
+          <div className="mt-8 space-y-5">
+            {CONTACT_INFO.map((row) => (
+              <div key={row.label} className="flex items-start gap-4">
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-gold-500/20 bg-gold-500/5">
+                  <row.icon size={15} className="text-gold-400" />
+                </span>
+                <div>
+                  <p className="font-mono text-[9px] tracking-widest text-gold-500/70">{row.label}</p>
+                  <p className="mt-0.5 text-sm text-cream/80">{row.value}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-8 border-t border-cream/10 pt-6">
+            <p className="font-mono text-[10px] tracking-widest text-cream/40">
+              RESPONSE · WITHIN ONE OPERATION CYCLE
+            </p>
+            <div className="mt-3 flex gap-2">
+              {TEAM.map((t, i) => (
+                <img
+                  key={t.id}
+                  src={PORTRAITS[i].src}
+                  alt={t.name}
+                  loading="lazy"
+                  title={t.name}
+                  className="h-9 w-9 rounded-full border border-gold-500/30 object-cover"
+                />
+              ))}
+            </div>
+          </div>
+        </motion.div>
+
+        <motion.form
+          onSubmit={submit}
+          initial={{ opacity: 0, x: 24 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: true, margin: "-60px" }}
+          transition={{ duration: 0.7, ease, delay: 0.1 }}
+          className="glass-light rounded-3xl p-8"
+        >
+          {status === "ok" ? (
+            <div className="flex h-full flex-col items-center justify-center py-16 text-center">
+              <span className="grid h-16 w-16 place-items-center rounded-full border border-emerald-400/30 bg-emerald-400/10">
+                <CheckCircle2 size={26} className="text-emerald-300" />
+              </span>
+              <h3 className="mt-6 font-serif text-3xl text-cream">Message received.</h3>
+              <p className="mt-3 max-w-sm text-sm leading-relaxed text-cream/55">
+                The concierge desk has your note. Expect a reply within one
+                operation cycle — and check the command deck in the meantime.
+              </p>
+              <button
+                type="button"
+                onClick={() => setStatus("idle")}
+                className="mt-8 rounded-full border border-cream/15 px-6 py-2.5 text-sm text-cream/80 transition-colors hover:border-gold-500/40 hover:text-gold-300"
+              >
+                Send another message
+              </button>
+            </div>
+          ) : (
+            <>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="font-mono text-[10px] tracking-widest text-cream/50">NAME</label>
+                  <input
+                    required
+                    value={form.name}
+                    onChange={set("name")}
+                    placeholder="Your name"
+                    className={`${inputCls} mt-2`}
+                  />
+                </div>
+                <div>
+                  <label className="font-mono text-[10px] tracking-widest text-cream/50">EMAIL</label>
+                  <input
+                    required
+                    type="email"
+                    value={form.email}
+                    onChange={set("email")}
+                    placeholder="you@example.com"
+                    className={`${inputCls} mt-2`}
+                  />
+                </div>
+              </div>
+              <div className="mt-4">
+                <label className="font-mono text-[10px] tracking-widest text-cream/50">SUBJECT</label>
+                <input
+                  value={form.subject}
+                  onChange={set("subject")}
+                  placeholder="A stay, a question, a mission…"
+                  className={`${inputCls} mt-2`}
+                />
+              </div>
+              <div className="mt-4">
+                <label className="font-mono text-[10px] tracking-widest text-cream/50">MESSAGE</label>
+                <textarea
+                  required
+                  value={form.message}
+                  onChange={set("message")}
+                  rows={4}
+                  placeholder="Tell the concierge everything."
+                  className={`${inputCls} mt-2 resize-none`}
+                />
+              </div>
+              {status === "error" && (
+                <p className="mt-3 text-xs text-rose-300">{err}</p>
+              )}
+              <button
+                type="submit"
+                disabled={status === "sending"}
+                className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-gold-fade px-6 py-3.5 text-sm font-medium text-ink-950 shadow-glow transition-transform hover:scale-[1.02] disabled:opacity-60"
+              >
+                {status === "sending" ? (
+                  <>
+                    <Loader2 size={15} className="animate-spin" /> Sending…
+                  </>
+                ) : (
+                  <>
+                    Send to the concierge <Send size={14} />
+                  </>
+                )}
+              </button>
+            </>
+          )}
+        </motion.form>
+      </div>
+    </section>
+  );
+}
+
 function SectionHeading({ kicker, title, sub }) {
   return (
     <div className="mx-auto max-w-3xl text-center">
@@ -712,6 +1012,271 @@ function SectionHeading({ kicker, title, sub }) {
       </h2>
       {sub && <p className="mt-4 text-sm leading-relaxed text-cream/55">{sub}</p>}
     </div>
+  );
+}
+
+const SHOWCASE = [
+  { src: GALLERY.lobby.src, label: "The Lobby", note: "Check-in, reimagined" },
+  { src: GALLERY.room.src, label: "The Rooms", note: "Silence above the Liffey" },
+  { src: GALLERY.dining.src, label: "The Table", note: "A dinner worth the night" },
+  { src: GALLERY.rooftop.src, label: "The Roof", note: "City lights, straight up" },
+  { src: GALLERY.spa.src, label: "The Spa", note: "Reset before midnight" },
+  { src: GALLERY.cocktail.src, label: "The Bar", note: "The night doesn't end" },
+  { src: GALLERY.chauffeur.src, label: "The Car", note: "Arrive decided" },
+];
+
+function GalleryShowcase() {
+  const [i, setI] = useState(0);
+  const n = SHOWCASE.length;
+  const go = (d) => setI((p) => (p + d + n) % n);
+
+  useEffect(() => {
+    const t = setInterval(() => setI((p) => (p + 1) % n), 5000);
+    return () => clearInterval(t);
+  }, [n]);
+
+  const cur = SHOWCASE[i];
+
+  return (
+    <section id="stay" className="relative z-10 mx-auto max-w-6xl px-6 py-14">
+      <SectionHeading
+        kicker="THE HOUSE"
+        title="Seven rooms, one night."
+        sub="Every space is a stage for the experiences VIRELLE designs — and every one of them is real, in the house and in the database."
+      />
+      <div className="relative mt-12 overflow-hidden rounded-3xl border border-gold-500/15">
+        <AnimatePresence mode="popLayout">
+          <motion.img
+            key={i}
+            src={cur.src}
+            alt={cur.label}
+            initial={{ opacity: 0, scale: 1.06 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.9, ease }}
+            className="h-[70vh] w-full object-cover"
+            loading="lazy"
+          />
+        </AnimatePresence>
+        <div className="absolute inset-0 bg-gradient-to-t from-ink-950 via-ink-950/20 to-transparent" />
+        <div className="absolute top-6 right-6 flex gap-1.5">
+          {SHOWCASE.map((_, d) => (
+            <span
+              key={d}
+              className={`h-1 rounded-full transition-all duration-300 ${
+                d === i ? "w-6 bg-gold-400" : "w-1.5 bg-cream/30"
+              }`}
+            />
+          ))}
+        </div>
+        <div className="absolute bottom-0 left-0 right-0 flex items-end justify-between gap-4 p-6 md:p-8">
+          <div>
+            <p className="font-mono text-[10px] tracking-widest text-gold-300">
+              {cur.label.toUpperCase()}
+            </p>
+            <p className="mt-1 font-serif text-2xl text-cream md:text-3xl">{cur.note}</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="font-mono text-sm text-cream/50">
+              {String(i + 1).padStart(2, "0")} / {String(n).padStart(2, "0")}
+            </span>
+            <button
+              onClick={() => go(-1)}
+              aria-label="Previous room"
+              className="grid h-10 w-10 place-items-center rounded-full border border-cream/15 bg-ink-950/40 text-cream/70 backdrop-blur transition-colors hover:border-gold-500/40 hover:text-gold-300"
+            >
+              <ChevronLeft size={16} />
+            </button>
+            <button
+              onClick={() => go(1)}
+              aria-label="Next room"
+              className="grid h-10 w-10 place-items-center rounded-full border border-cream/15 bg-ink-950/40 text-cream/70 backdrop-blur transition-colors hover:border-gold-500/40 hover:text-gold-300"
+            >
+              <ChevronRight size={16} />
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ChainIndex() {
+  const [active, setActive] = useState(0);
+
+  return (
+    <div className="mt-12 grid items-start gap-8 lg:grid-cols-12">
+      <div className="lg:col-span-7">
+        {TEAM.map((member, i) => {
+          const stage = STAGES[i];
+          const is = i === active;
+          return (
+            <motion.button
+              key={member.id}
+              onMouseEnter={() => setActive(i)}
+              onFocus={() => setActive(i)}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-60px" }}
+              transition={{ delay: i * 0.06, duration: 0.5, ease }}
+              className={`group flex w-full items-start gap-5 border-b py-6 text-left transition-colors duration-300 ${
+                is ? "border-gold-500/40" : "border-cream/10"
+              }`}
+            >
+              <span
+                className={`font-serif text-4xl leading-none transition-colors duration-300 ${
+                  is ? "text-gold-400" : "text-cream/20"
+                }`}
+              >
+                {String(i + 1).padStart(2, "0")}
+              </span>
+              <span className="flex-1">
+                <span className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                  <span
+                    className={`font-serif text-2xl transition-colors duration-300 md:text-3xl ${
+                      is ? "text-cream" : "text-cream/70"
+                    }`}
+                  >
+                    {stage.label}
+                  </span>
+                  <span className="font-mono text-[10px] tracking-widest" style={{ color: member.color }}>
+                    {member.name.toUpperCase()} · {member.title.toUpperCase()}
+                  </span>
+                </span>
+                <AnimatePresence initial={false}>
+                  {is && (
+                    <motion.span
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.3 }}
+                      className="block overflow-hidden"
+                    >
+                      <span className="mt-2 block max-w-xl text-sm leading-relaxed text-cream/60">
+                        "{member.philosophy}" — {member.name}
+                      </span>
+                    </motion.span>
+                  )}
+                </AnimatePresence>
+              </span>
+              <ArrowRight
+                size={16}
+                className={`mt-1.5 shrink-0 transition-all duration-300 ${
+                  is ? "translate-x-0 text-gold-400 opacity-100" : "-translate-x-2 opacity-0"
+                }`}
+              />
+            </motion.button>
+          );
+        })}
+      </div>
+
+      <div className="sticky top-24 hidden lg:col-span-5 lg:block">
+        <div className="relative aspect-[4/5] overflow-hidden rounded-3xl border border-gold-500/15">
+          <AnimatePresence mode="wait">
+            <motion.img
+              key={active}
+              src={PORTRAITS[active].src}
+              alt={PORTRAITS[active].alt}
+              initial={{ opacity: 0, scale: 1.08 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.98 }}
+              transition={{ duration: 0.5, ease }}
+              className="h-full w-full object-cover"
+              loading="lazy"
+            />
+          </AnimatePresence>
+          <div className="absolute inset-0 bg-gradient-to-t from-ink-950 via-transparent to-transparent" />
+          <div className="absolute bottom-0 left-0 p-6">
+            <p className="font-mono text-[10px] tracking-widest" style={{ color: TEAM[active].color }}>
+              {STAGES[active].verb.toUpperCase()} · {TEAM[active].title.toUpperCase()}
+            </p>
+            <p className="mt-1 font-serif text-2xl text-cream">{TEAM[active].name}</p>
+            <p className="text-xs text-cream/55">{TEAM[active].philosophy}</p>
+          </div>
+        </div>
+        <p className="mt-4 text-center font-mono text-[10px] tracking-widest text-cream/30">
+          HOVER THE LIST TO FOLLOW THE CHAIN
+        </p>
+      </div>
+    </div>
+  );
+}
+
+const FAQS = [
+  {
+    q: "Is this real, or a mockup?",
+    a: "Fully working. The backend runs live on Render — the agents call real APIs (Fáilte Ireland events, Open-Meteo weather, an external travel feed) and query real hotel data stored in SQLite through an MCP server. Nothing on these screens is copy-pasted or hardcoded.",
+  },
+  {
+    q: "Do I need an API key to try it?",
+    a: "No keys needed. The live organisation runs on the deployed backend — type a mission in Command and watch the five agents execute it in sequence.",
+  },
+  {
+    q: "Can I actually book the experience it designs?",
+    a: "Yes. The product page includes a live booking flow that writes a real booking record into the database and marks the inventory sold.",
+  },
+  {
+    q: "What happens to my data?",
+    a: "Names, emails and messages from the contact form, plus booking records, are stored in the hotel database so the concierge can reply. No payment data is collected.",
+  },
+  {
+    q: "Who built VIRELLE?",
+    a: "The five specialists you meet in the chain — Eleanor, Sofia, Julian, Amelia and Alexander — coordinated by a single operation. It is the product, not the pitch.",
+  },
+];
+
+function Faq() {
+  const [open, setOpen] = useState(0);
+
+  return (
+    <section className="relative z-10 mx-auto max-w-3xl px-6 py-16">
+      <SectionHeading
+        kicker="QUESTIONS"
+        title="Asked, answered."
+        sub="The questions every guest asks before they hand the night over to the organisation."
+      />
+      <div className="mt-12 space-y-3">
+        {FAQS.map((f, i) => {
+          const is = i === open;
+          return (
+            <div
+              key={f.q}
+              className={`glass rounded-2xl transition-colors duration-300 ${
+                is ? "border-gold-500/30" : "border-cream/10"
+              }`}
+            >
+              <button
+                onClick={() => setOpen(is ? -1 : i)}
+                className="flex w-full items-center justify-between gap-4 px-6 py-5 text-left"
+              >
+                <span className={`font-serif text-lg transition-colors ${is ? "text-gold-200" : "text-cream"}`}>
+                  {f.q}
+                </span>
+                <ChevronDown
+                  size={16}
+                  className={`shrink-0 text-gold-400 transition-transform duration-300 ${
+                    is ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
+              <AnimatePresence initial={false}>
+                {is && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.3, ease }}
+                    className="overflow-hidden"
+                  >
+                    <p className="px-6 pb-5 text-sm leading-relaxed text-cream/60">{f.a}</p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          );
+        })}
+      </div>
+    </section>
   );
 }
 

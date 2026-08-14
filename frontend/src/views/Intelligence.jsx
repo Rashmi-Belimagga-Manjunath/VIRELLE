@@ -19,6 +19,7 @@ import {
 import { connectionsLive, livePayload } from "../api.js";
 import { useOperation } from "../hooks/useOperation.js";
 import CinematicImage from "../components/CinematicImage.jsx";
+import SectionHero from "../components/SectionHero.jsx";
 import { WEATHER_IMAGES, GALLERY } from "../components/Images.jsx";
 
 const CONN_META = {
@@ -79,15 +80,16 @@ export default function Intelligence({ opId, navigate }) {
   const liveAt = live?.fetched_at || null;
 
   return (
-    <div className="relative z-10 mx-auto max-w-7xl px-6 py-12">
-      <div className="text-center">
-        <p className="font-mono text-[11px] tracking-widest2 text-gold-500/80">VIRELLE INTELLIGENCE</p>
-        <h1 className="mt-2 font-serif text-4xl text-cream md:text-5xl">Live data, evidence, research</h1>
-        <p className="mx-auto mt-3 max-w-xl text-sm text-cream/55">
-          Every source below is queried at the moment of use — nothing is cached,
-          hardcoded or copy-pasted.
-        </p>
-      </div>
+    <>
+      <SectionHero
+        chapter="Chapter 03 · The Evidence"
+        kicker="VIRELLE INTELLIGENCE"
+        title="Live data, evidence, research"
+        sub="Every source below is queried at the moment of use — nothing is cached, hardcoded or copy-pasted."
+        image={GALLERY.dublin.src}
+        imageAlt="Dublin live intelligence"
+      />
+      <div className="relative z-10 mx-auto max-w-7xl px-6 py-12">
 
       {/* ===== LIVE NOW — real-time imagery banner ===== */}
       <div className="mt-10 grid gap-5 lg:grid-cols-3">
@@ -424,7 +426,8 @@ export default function Intelligence({ opId, navigate }) {
           </p>
         )}
       </div>
-    </div>
+      </div>
+    </>
   );
 }
 

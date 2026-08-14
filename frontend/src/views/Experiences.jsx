@@ -13,7 +13,8 @@ import {
 } from "lucide-react";
 import { bookProduct, latestProduct, fmtDate } from "../api.js";
 import { useOperation } from "../hooks/useOperation.js";
-import { ProductImage } from "../components/Images.jsx";
+import { ProductImage, GALLERY } from "../components/Images.jsx";
+import SectionHero from "../components/SectionHero.jsx";
 
 export default function Experiences({ opId }) {
   const { op } = useOperation(opId);
@@ -53,16 +54,16 @@ export default function Experiences({ opId }) {
   };
 
   return (
-    <div className="relative z-10 mx-auto max-w-6xl px-6 py-12">
-      <div className="text-center">
-        <p className="font-mono text-[11px] tracking-widest2 text-gold-500/80">VIRELLE EXPERIENCES</p>
-        <h1 className="mt-2 font-serif text-4xl text-cream md:text-5xl">What the Maker built</h1>
-        <p className="mx-auto mt-3 max-w-xl text-sm text-cream/55">
-          A working, customer-facing product with a real booking flow — constructed
-          by Julian Mercer from Sofia's design.
-        </p>
-      </div>
-
+    <>
+      <SectionHero
+        chapter="Chapter 04 · The Product"
+        kicker="VIRELLE EXPERIENCES"
+        title="What the Maker built"
+        sub="A working, customer-facing product with a real booking flow — constructed by Julian Mercer from Sofia's design."
+        image={GALLERY.dining.src}
+        imageAlt="VIRELLE experience"
+      />
+      <div className="relative z-10 mx-auto max-w-6xl px-6 py-12">
       {!product ? (
         <div className="glass mt-12 rounded-2xl p-12 text-center">
           <Moon size={26} className="mx-auto text-gold-500/60" />
@@ -258,6 +259,7 @@ export default function Experiences({ opId }) {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 }

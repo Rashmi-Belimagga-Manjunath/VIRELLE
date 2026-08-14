@@ -14,6 +14,8 @@ import {
   Server,
 } from "lucide-react";
 import { TEAM, STAGES, MISSION_SUGGESTIONS } from "../constants.jsx";
+import { GALLERY } from "../components/Images.jsx";
+import SectionHero from "../components/SectionHero.jsx";
 import { connections as fetchConnections, startOperation } from "../api.js";
 import { useOperation } from "../hooks/useOperation.js";
 
@@ -67,31 +69,29 @@ export default function Operations({ opId, navigate }) {
   };
 
   return (
-    <div className="relative z-10 mx-auto max-w-7xl px-6 py-12">
-      {/* header */}
-      <div className="flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
-        <div>
-          <p className="font-mono text-[11px] tracking-widest2 text-gold-500/80">VIRELLE OPERATIONS</p>
-          <h1 className="mt-2 font-serif text-4xl text-cream md:text-5xl">The live workspace</h1>
-          <p className="mt-3 max-w-xl text-sm leading-relaxed text-cream/55">
-            Give the organisation a mission. The five agents execute in sequence,
-            each querying live data and real hotel operations as they work.
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
+    <>
+      <SectionHero
+        chapter="Chapter 02 · The Live Workspace"
+        kicker="VIRELLE OPERATIONS"
+        title="The live workspace"
+        sub="Give the organisation a mission. The five agents execute in sequence, each querying live data and real hotel operations as they work."
+        image={GALLERY.dublinNight.src}
+        imageAlt="VIRELLE operations"
+      />
+      <div className="relative z-10 mx-auto max-w-7xl px-6 py-12">
+      <div className="flex justify-end">
+        <span
+          className={`flex items-center gap-2 rounded-full border px-4 py-2 font-mono text-[10px] tracking-widest ${
+            running
+              ? "border-emerald-400/30 bg-emerald-400/10 text-emerald-300"
+              : "border-cream/10 text-cream/40"
+          }`}
+        >
           <span
-            className={`flex items-center gap-2 rounded-full border px-4 py-2 font-mono text-[10px] tracking-widest ${
-              running
-                ? "border-emerald-400/30 bg-emerald-400/10 text-emerald-300"
-                : "border-cream/10 text-cream/40"
-            }`}
-          >
-            <span
-              className={`h-2 w-2 rounded-full ${running ? "bg-emerald-400 pulse-dot" : "bg-cream/30"}`}
-            />
-            {running ? "OPERATION LIVE" : "STANDBY"}
-          </span>
-        </div>
+            className={`h-2 w-2 rounded-full ${running ? "bg-emerald-400 pulse-dot" : "bg-cream/30"}`}
+          />
+          {running ? "OPERATION LIVE" : "STANDBY"}
+        </span>
       </div>
 
       {/* mission bar */}
@@ -156,7 +156,8 @@ export default function Operations({ opId, navigate }) {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 }
 
