@@ -257,12 +257,12 @@ export default function Landing({ navigate, onOperate }) {
           <h1 className="max-w-6xl text-center font-serif leading-[1.04] text-cream text-[clamp(2.4rem,6vw,5.4rem)]">
             <Word stagger delay={0.1}>From</Word>{" "}
             <Word stagger delay={0.2}>live</Word>{" "}
-            <span className="shine-text headline-glow">
+            <span className="shine-text">
               <Word stagger delay={0.3}>signals</Word>
             </span>
             <br />
             <Word stagger delay={0.45}>to</Word>{" "}
-            <span className="shine-text headline-glow">
+            <span className="shine-text">
               <Word stagger delay={0.55}>exceptional</Word>{" "}
               <Word stagger delay={0.65}>experiences.</Word>
             </span>

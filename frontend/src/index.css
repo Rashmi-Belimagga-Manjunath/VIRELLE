@@ -56,32 +56,29 @@ body {
 }
 
 .shine-text {
-  background: linear-gradient(
-    100deg,
-    #f7e8c3 0%,
-    #e2c078 18%,
-    #c9a76b 34%,
-    #f8ebc0 52%,
-    #c9a76b 70%,
-    #e2c078 84%,
-    #f7e8c3 100%
-  );
-  background-size: 240% 100%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  animation: shine-sweep 4.5s ease-in-out infinite;
+  position: relative;
+  display: inline-block;
+  color: #ecd5a0;
+  text-shadow:
+    0 0 18px rgba(201, 167, 107, 0.35),
+    0 2px 26px rgba(0, 0, 0, 0.6);
 }
 
-@keyframes shine-sweep {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+.shine-text::after {
+  content: "";
+  position: absolute;
+  inset: -10% -18%;
+  background: linear-gradient(110deg, transparent 25%, rgba(255, 246, 214, 0.34) 50%, transparent 75%);
+  background-size: 250% 100%;
+  background-repeat: no-repeat;
+  animation: sheen-sweep 4.5s ease-in-out infinite;
+  mix-blend-mode: screen;
+  pointer-events: none;
 }
 
-.headline-glow {
-  filter: drop-shadow(0 0 16px rgba(201, 167, 107, 0.32))
-    drop-shadow(0 2px 28px rgba(0, 0, 0, 0.65));
+@keyframes sheen-sweep {
+  0% { background-position: 130% 0; }
+  100% { background-position: -130% 0; }
 }
 
 .aurora {
