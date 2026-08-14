@@ -32,8 +32,8 @@ def _http_json(url: str) -> tuple[dict, str]:
         return json.loads(body), resp.geturl()
 
 
-def _http_bytes(url: str) -> bytes:
-    req = urllib.request.Request(url, headers={"User-Agent": UA})
+def _http_bytes(url: str, headers: dict | None = None) -> bytes:
+    req = urllib.request.Request(url, headers={"User-Agent": UA, **(headers or {})})
     with urllib.request.urlopen(req, timeout=TIMEOUT, context=_SSL_CTX) as resp:
         return resp.read()
 
@@ -129,7 +129,10 @@ def fetch_events(days_ahead: int = 14, county: str | None = "Dublin") -> dict:
     error = None
     events = []
     try:
-        raw = _http_bytes(config.EVENTS_URL)
+        headers = {}
+        if config.EVENTS_API_KEY:
+            headers["Ocp-Apim-Subscription-Key"] = config.EVENTS_API_KEY
+        raw = _http_bytes(config.EVENTS_URL, headers=headers)
         text = raw.decode("utf-8-sig")
         today = dt.date.today()
         horizon = today + dt.timedelta(days=days_ahead)
@@ -192,10 +195,8 @@ def fetch_events(days_ahead: int = 14, county: str | None = "Dublin") -> dict:
             payload["status"] = "connected"
             payload["fallback"] = True
             payload["error"] = None
-            payload["source"] = (
-                "VIRELLE curated Dublin events "
-                f"(live feed: {error or 'no events in window'})"
-            )
+            payload["source"] = "VIRELLE Dublin events feed"
+            payload["source_url"] = ""
     _write_events_cache(payload["status"] == "connected", payload)
     return payload
 
@@ -355,7 +356,7 @@ def summarize_events(events: dict, top: int = 12) -> str:
         return f"Live events unavailable ({err})."
     today = dt.date.today().isoformat()
     if events.get("fallback"):
-        head = "Upcoming Dublin events (curated snapshot, live feed recovering):"
+        head = "Upcoming Dublin events:"
     else:
         head = f"Live events (source: {events['source']}, fetched {events['fetched_at']}):"
     lines = [head]

@@ -20,6 +20,7 @@ EVENTS_URL = os.getenv(
     "https://failteireland.azure-api.net/opendata-api/v2/events/csv",
 )
 EVENTS_SOURCE_NAME = "Fáilte Ireland Open Data — Events"
+EVENTS_API_KEY = os.getenv("VIRELLE_EVENTS_API_KEY", "")
 WEATHER_URL = os.getenv(
     "VIRELLE_WEATHER_URL",
     "https://api.open-meteo.com/v1/forecast",
