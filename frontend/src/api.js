@@ -1,4 +1,5 @@
-const BASE = import.meta.env.VITE_API_BASE || "/api";
+const rawBase = import.meta.env.VITE_API_BASE || "/api";
+const BASE = rawBase.endsWith("/api") ? rawBase : `${rawBase.replace(/\/+$/, "")}/api`;
 
 async function jsonFetch(path, options) {
   const res = await fetch(`${BASE}${path}`, {
