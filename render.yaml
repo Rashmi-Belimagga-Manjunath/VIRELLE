@@ -1,0 +1,25 @@
+# Render Blueprint — deploys the VIRELLE backend to a free web service.
+# The frontend lives on GitHub Pages (submitted link) and calls this API.
+#
+# How to deploy (one time, ~5 minutes):
+#   1. Create a free account at https://render.com (sign in with GitHub)
+#   2. Click "New +" -> "Blueprint"
+#   3. Select this repository -> Render reads render.yaml and provisions the service
+#   4. In the dashboard, open the service -> Environment -> set OPENAI_API_KEY
+#      (it is marked "requires a value" and is stored as a Render secret, never in code)
+#   5. Deploy. Your API base will be https://<service-name>.onrender.com
+#   6. Tell the project owner the URL so GitHub Pages is rebuilt to call it.
+
+services:
+  - type: web
+    name: virelle-live
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/health
+    envVars:
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: VIRELLE_OPENAI_MODEL
+        value: gpt-4o
