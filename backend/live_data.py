@@ -100,11 +100,24 @@ def _quota_reset_hint(exc) -> str | None:
     return " ".join(parts)
 
 
+CURATED_EVENTS_FILE = config.BASE_DIR / "curated_events.json"
+
+
+def _load_curated_events() -> list[dict]:
+    try:
+        data = json.loads(CURATED_EVENTS_FILE.read_text())
+        return data.get("events", [])
+    except Exception:  # noqa: BLE001
+        return []
+
+
 def fetch_events(days_ahead: int = 14, county: str | None = "Dublin") -> dict:
     """Fetch live events from the Fáilte Ireland open data events API.
 
     Responses are cached (6h on success, 30min on failure) so the free
-    bandwidth quota of the upstream feed is used sparingly.
+    bandwidth quota of the upstream feed is used sparingly. When the live
+    feed is unavailable or rate-limited, a curated snapshot of real Dublin
+    events is served instead so the chat never dead-ends.
     """
     cached = _read_events_cache()
     if cached is not None:
@@ -169,8 +182,21 @@ def fetch_events(days_ahead: int = 14, county: str | None = "Dublin") -> dict:
         "count": len(events),
         "events": events[:200],
         "cached": False,
+        "fallback": False,
     }
-    _write_events_cache(status == "connected", payload)
+    if status != "connected" or not events:
+        curated = _load_curated_events()
+        if curated:
+            payload["events"] = curated
+            payload["count"] = len(curated)
+            payload["status"] = "connected"
+            payload["fallback"] = True
+            payload["error"] = None
+            payload["source"] = (
+                "VIRELLE curated Dublin events "
+                f"(live feed: {error or 'no events in window'})"
+            )
+    _write_events_cache(payload["status"] == "connected", payload)
     return payload
 
 
@@ -328,7 +354,11 @@ def summarize_events(events: dict, top: int = 12) -> str:
         err = events.get("error") or "no events in window"
         return f"Live events unavailable ({err})."
     today = dt.date.today().isoformat()
-    lines = [f"Live events (source: {events['source']}, fetched {events['fetched_at']}):"]
+    if events.get("fallback"):
+        head = "Upcoming Dublin events (curated snapshot, live feed recovering):"
+    else:
+        head = f"Live events (source: {events['source']}, fetched {events['fetched_at']}):"
+    lines = [head]
     for e in events["events"][:top]:
         price = "Free" if e["free"] else (e["price"] or "n/a")
         lines.append(
