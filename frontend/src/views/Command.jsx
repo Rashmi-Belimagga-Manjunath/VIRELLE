@@ -7,17 +7,9 @@ import { GALLERY } from "../components/Images.jsx";
 import SectionHero from "../components/SectionHero.jsx";
 
 const OPENING =
-  "Good evening. What would you like VIRELLE to solve?\n\nGive me a business objective, and I'll coordinate the organisation from research to decision.";
+  "Good evening. How can I help?\n\nTell me what you're looking for — a night out, a weekend, dinner — and I'll take care of the rest.";
 
-const AGENT_PILL = {
-  researcher: { label: "ELEANOR", color: "#4facfe" },
-  designer: { label: "SOFIA", color: "#f6c86a" },
-  maker: { label: "JULIAN", color: "#5eead4" },
-  communicator: { label: "AMELIA", color: "#f472b6" },
-  manager: { label: "ALEXANDER", color: "#c4b5fd" },
-};
-
-export default function Command({ onOperate }) {
+export default function Command() {
   const [sessionId, setSessionId] = useState(null);
   const [messages, setMessages] = useState([
     { role: "assistant", text: OPENING },
@@ -48,36 +40,10 @@ export default function Command({ onOperate }) {
       if (ev.type === "assistant") {
         setTyping(false);
         setMessages((m) => [...m, { role: "assistant", text: ev.text }]);
-      } else if (ev.type === "agent") {
-        if (ev.status === "working") {
-          agentTracker.add(ev.agent);
-          const pill = AGENT_PILL[ev.agent];
-          setMessages((m) => [
-            ...m,
-            {
-              role: "activity",
-              id: ev.agent,
-              text: `${pill?.label || ev.agent} is now working on this mission.`,
-              color: pill?.color,
-            },
-          ]);
-        }
       } else if (ev.type === "operation_started") {
-        setTyping(false);
-        setMessages((m) => [
-          ...m,
-          {
-            role: "assistant",
-            text: "The organisation has begun. I'll stream the live pipeline here — or open VIRELLE Operations for the full workspace.",
-          },
-        ]);
-        onOperate(ev.operation_id);
+        // Operation runs quietly in the background — no narration needed.
       } else if (ev.type === "operation_done") {
-        setMessages((m) => [
-          ...m,
-          { role: "assistant", text: "Operation complete. The organisation reached its decision." },
-        ]);
-        onOperate(ev.operation_id);
+        // The final answer has already been delivered above.
       } else if (ev.type === "error") {
         setTyping(false);
         setMessages((m) => [...m, { role: "assistant", text: ev.text, error: true }]);

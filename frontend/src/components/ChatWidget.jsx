@@ -2,20 +2,17 @@ import React, { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageCircle, Send, X, Sparkles, User } from "lucide-react";
 import { createChatSession, chatStream } from "../api.js";
-import { MISSION_SUGGESTIONS } from "../constants.jsx";
 
 const OPENING =
-  "Good evening. What would you like VIRELLE to solve?\n\nGive me a business objective, and I'll coordinate the organisation from research to decision.";
+  "Good evening. How can I help?\n\nTell me what you're looking for — a night out, a weekend, dinner — and I'll take care of the rest.";
 
-const AGENT_PILL = {
-  researcher: { label: "ELEANOR", color: "#4facfe" },
-  designer: { label: "SOFIA", color: "#f6c86a" },
-  maker: { label: "JULIAN", color: "#5eead4" },
-  communicator: { label: "AMELIA", color: "#f472b6" },
-  manager: { label: "ALEXANDER", color: "#c4b5fd" },
-};
+const CUSTOMER_SUGGESTIONS = [
+  "Any great experiences this weekend?",
+  "Where can we get dinner tonight?",
+  "What's on in Dublin?",
+];
 
-export default function ChatWidget({ onOperate }) {
+export default function ChatWidget() {
   const [open, setOpen] = useState(false);
   const [sessionId, setSessionId] = useState(null);
   const [messages, setMessages] = useState([{ role: "assistant", text: OPENING }]);
@@ -65,31 +62,10 @@ export default function ChatWidget({ onOperate }) {
     setTyping(true);
     try {
       const sid = await getSession();
-      const seen = new Set();
       await chatStream(sid, message, (ev) => {
         if (ev.type === "assistant") {
           setTyping(false);
           setMessages((m) => [...m, { role: "assistant", text: ev.text }]);
-        } else if (ev.type === "agent" && ev.status === "working" && !seen.has(ev.agent)) {
-          seen.add(ev.agent);
-          const pill = AGENT_PILL[ev.agent];
-          setMessages((m) => [
-            ...m,
-            { role: "activity", text: `${pill?.label || ev.agent} is now working on this mission.`, color: pill?.color },
-          ]);
-        } else if (ev.type === "operation_started") {
-          setTyping(false);
-          setMessages((m) => [
-            ...m,
-            { role: "assistant", text: "The organisation has begun. Opening the live workspace for you…" },
-          ]);
-          onOperate(ev.operation_id);
-        } else if (ev.type === "operation_done") {
-          setMessages((m) => [
-            ...m,
-            { role: "assistant", text: "Operation complete. The organisation reached its decision." },
-          ]);
-          onOperate(ev.operation_id);
         } else if (ev.type === "error") {
           setTyping(false);
           setMessages((m) => [...m, { role: "assistant", text: ev.text, error: true }]);
@@ -154,7 +130,7 @@ export default function ChatWidget({ onOperate }) {
 
             {/* suggestions */}
             <div className="flex gap-2 overflow-x-auto px-4 pb-2">
-              {MISSION_SUGGESTIONS.slice(0, 3).map((s) => (
+              {CUSTOMER_SUGGESTIONS.map((s) => (
                 <button
                   key={s}
                   onClick={() => send(s)}
@@ -174,7 +150,7 @@ export default function ChatWidget({ onOperate }) {
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && send()}
                   disabled={busy}
-                  placeholder="Ask me about revenue, rooms…"
+                  placeholder="Ask me anything — a table, a weekend, an event…"
                   className="flex-1 bg-transparent text-[13px] text-cream placeholder:text-cream/30"
                 />
                 <button

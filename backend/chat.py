@@ -172,7 +172,7 @@ async def chat_stream(sid: str, user_text: str) -> None:
     if user_text.strip().startswith("/operate"):
         mission = user_text.strip()[len("/operate"):].strip()
         mission = mission or "Find a high-value opportunity to increase weekend revenue."
-        async for ev in _run_operation_chat(sid, mission):
+        async for ev in _run_operation_silent(sid, mission):
             yield ev
         return
 
@@ -182,9 +182,7 @@ async def chat_stream(sid: str, user_text: str) -> None:
         return
 
     if _should_operate(user_text):
-        yield {"type": "assistant",
-               "text": "Understood. I'm activating the organisation. Eleanor Hayes will first investigate live destination and hotel data — events, weather, occupancy, facility utilisation — before the chain moves to design, build, communicate and decide. Stand by for live intelligence."}
-        async for ev in _run_operation_chat(sid, user_text):
+        async for ev in _run_operation_silent(sid, user_text):
             yield ev
         return
 
@@ -197,40 +195,47 @@ async def chat_stream(sid: str, user_text: str) -> None:
         yield {"type": "error", "text": f"The concierge service is unavailable: {exc}"}
 
 
-async def _run_operation_chat(sid: str, mission: str) -> None:
+async def _run_operation_silent(sid: str, mission: str) -> None:
+    """Run the full organisation in the background and reply once, plainly.
+
+    The customer sees nothing of the machinery — just the typing indicator,
+    then a single clean answer with the experience that was designed.
+    """
     op = Operation(mission)
     pipeline.OPS[op.id] = op
     yield {"type": "operation_started", "operation_id": op.id, "mission": mission}
+
     task = asyncio.create_task(run_operation(op))
+    while not task.done():
+        await asyncio.sleep(0.5)
 
-    streamed_agents = set()
-    while True:
-        if task.done() and op.queue.empty():
-            break
-        try:
-            event = await asyncio.wait_for(op.queue.get(), timeout=0.6)
-        except asyncio.TimeoutError:
-            continue
-        if event["type"] == "agent_status":
-            a = op.agents[event["agent_id"]]
-            if event["status"] == "working":
-                yield {"type": "agent", "text": f"{a['name']} — {a['title']} is now working.", "agent": event["agent_id"], "status": "working"}
-            elif event["status"] == "done":
-                yield {"type": "agent", "text": f"{a['name']} has completed their work.", "agent": event["agent_id"], "status": "done"}
-        elif event["type"] == "agent_output" and event["agent_id"] == "manager":
-            d = event.get("output", {}).get("decision", {})
-            verdict = d.get("verdict", "DECISION DELIVERED")
-            yield {"type": "assistant",
-                   "text": f"The organisation has concluded.\n\nVerdict: {verdict}.\n\n{d.get('decision_summary', '')}",
-                   "operation_id": op.id}
-        elif event["type"] == "operation":
-            if event.get("status") == "complete":
-                yield {"type": "operation_done", "operation_id": op.id}
-                return
-            if event.get("status") == "failed":
-                yield {"type": "error", "text": f"The operation failed: {event.get('error')}"}
-                return
+    if op.status == "failed":
+        yield {"type": "assistant",
+               "text": "I couldn't pull that together, I'm afraid. Could you tell me a little more about what you're looking for?"}
+        return
 
-    yield {"type": "assistant",
-           "text": "The organisation has completed its work. Open the Live Operation view to inspect the pipeline, evidence and the final business decision.",
-           "operation_id": op.id}
+    answer = _customer_answer(op)
+    _add(sid, "assistant", answer)
+    yield {"type": "assistant", "text": answer}
+    yield {"type": "operation_done", "operation_id": op.id}
+
+
+def _customer_answer(op: Operation) -> str:
+    product = op.product or {}
+    bc = product.get("booking_config") or {}
+    name = product.get("experience_name") or "a new experience"
+    stay_date = bc.get("date") or product.get("stay_date")
+    price = bc.get("price") or product.get("price")
+    verdict = (op.decision or {}).get("verdict") if op.decision else None
+
+    lines = ["Wonderful — we've arranged something for you:"]
+    lines.append(f"• {name}")
+    if stay_date:
+        lines.append(f"• {stay_date}")
+    if price:
+        lines.append(f"• €{price} per guest")
+    if verdict:
+        lines.append(f"• {verdict}")
+    lines.append("")
+    lines.append("Shall I reserve it for you?")
+    return "\n".join(lines)
