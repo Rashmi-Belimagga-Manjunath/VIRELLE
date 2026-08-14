@@ -142,8 +142,9 @@ def _run_concierge_tool(name: str, args: dict) -> str:
             for i in r.get("inventory", []):
                 total = i["rooms_total"]
                 avail = i["available"]
+                weekday = dt.date.fromisoformat(i["stay_date"]).strftime("%A")
                 lines.append(
-                    f"- {i['stay_date']}: {avail}/{total} rooms available "
+                    f"- {i['stay_date']} ({weekday}): {avail}/{total} rooms available "
                     f"({total - avail} booked, "
                     f"{round((total - avail) / total * 100)}% occupied)"
                 )
