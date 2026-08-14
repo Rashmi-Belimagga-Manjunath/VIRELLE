@@ -99,4 +99,5 @@ export const NAV_ITEMS = [
   { id: "experiences", label: "Experiences" },
   { id: "launch", label: "Launch" },
   { id: "executive", label: "Executive" },
+  { id: "team", label: "Team" },
 ];

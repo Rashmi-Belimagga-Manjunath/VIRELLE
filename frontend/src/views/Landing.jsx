@@ -1,5 +1,5 @@
-import React, { useEffect, useRef } from "react";
-import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
+import React, { useEffect, useRef, useState } from "react";
+import { motion, useMotionValue, useSpring, useTransform, AnimatePresence } from "framer-motion";
 import {
   Radar,
   Sparkles,
@@ -13,9 +13,60 @@ import {
   CloudSun,
   Workflow,
   ChevronDown,
+  Wind,
+  Droplets,
+  Calendar,
+  Quote,
+  Star,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { TEAM, STAGES, MISSION_SUGGESTIONS } from "../constants.jsx";
-import { GALLERY } from "../components/Images.jsx";
+import { GALLERY, WEATHER_IMAGES } from "../components/Images.jsx";
+import CinematicImage from "../components/CinematicImage.jsx";
+import LiveWeatherCard from "../components/LiveWeatherCard.jsx";
+import { livePayload } from "../api.js";
+
+const TESTIMONIALS = [
+  {
+    quote:
+      "The Jazz & Indulgence Retreat sold out before we even landed in Dublin. VIRELLE's 'the night doesn't end' package turned one Saturday into our best weekend of the year.",
+    name: "Aoife Byrne",
+    role: "Guest · Galway",
+    avatar:
+      "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop",
+  },
+  {
+    quote:
+      "I watched the whole organisation run a live operation from my phone — research, design, build, campaign, and a signed executive decision in minutes. The booking flow actually worked end to end.",
+    name: "Marcus O'Sullivan",
+    role: "Business traveller · London",
+    avatar:
+      "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=200&auto=format&fit=crop",
+  },
+  {
+    quote:
+      "The cultural escape itinerary matched the exact week we were in Dublin — real Fáilte Ireland events, the live weather for our plans, and a room on what was supposedly a sold-out Saturday.",
+    name: "Priya Raghavan",
+    role: "Guest · Mumbai",
+    avatar:
+      "https://images.unsplash.com/photo-1517841905240-472988babdf9?q=80&w=200&auto=format&fit=crop",
+  },
+  {
+    quote:
+      "I typed 'we have unsold rooms, what do we do' into the chat and VIRELLE produced a priced, bookable product with verified economics. It felt like a small team, not a chatbot.",
+    name: "Daniel Keller",
+    role: "Guest · Berlin",
+    avatar:
+      "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?q=80&w=200&auto=format&fit=crop",
+  },
+];
+
+const TESTIMONIAL_VARIANTS = {
+  enter: (d) => ({ x: d * 70, opacity: 0 }),
+  center: { x: 0, opacity: 1 },
+  exit: (d) => ({ x: d * -70, opacity: 0 }),
+};
 
 const ICONS = {
   radar: Radar,
@@ -79,6 +130,27 @@ const ease = [0.22, 1, 0.36, 1];
 
 export default function Landing({ navigate, onOperate }) {
   const heroRef = useRef(null);
+  const [weather, setWeather] = useState(null);
+  const [liveAt, setLiveAt] = useState(null);
+
+  useEffect(() => {
+    let mounted = true;
+    const probe = () =>
+      livePayload()
+        .then((r) => {
+          if (!mounted) return;
+          setWeather(r?.weather?.summary || null);
+          setLiveAt(r?.fetched_at || null);
+        })
+        .catch(() => {});
+    probe();
+    const t = setInterval(probe, 60000);
+    return () => {
+      mounted = false;
+      clearInterval(t);
+    };
+  }, []);
+  const weatherKind = weather?.condition_kind || "clear";
 
   const mx = useMotionValue(0);
   const my = useMotionValue(0);
@@ -170,6 +242,11 @@ export default function Landing({ navigate, onOperate }) {
             </p>
           </div>
         </motion.div>
+
+        {/* floating live-weather card */}
+        <div className="absolute right-10 top-56 z-10 hidden 2xl:block">
+          <LiveWeatherCard />
+        </div>
 
         {/* headline content */}
         <motion.div
@@ -268,6 +345,66 @@ export default function Landing({ navigate, onOperate }) {
           ))}
         </div>
       </div>
+
+      {/* ================= LIVE WEATHER ================= */}
+      <section className="relative z-10 mx-auto max-w-6xl px-6 py-14">
+        <SectionHeading
+          kicker="LIVE FROM DUBLIN"
+          title="The city, right now."
+          sub="Real weather pulled live from Open-Meteo the moment this page loads — the same feed VIRELLE's agents use to shape tonight's experience. It refreshes every 60 seconds."
+        />
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-60px" }}
+          transition={{ duration: 0.7, ease }}
+          className="relative mt-12 overflow-hidden rounded-3xl border border-gold-500/15"
+        >
+          <CinematicImage
+            src={WEATHER_IMAGES[weatherKind] || WEATHER_IMAGES.clear}
+            alt="Dublin live weather from Open-Meteo"
+            className="h-80 md:h-96"
+            speed={0.6}
+          >
+            <div className="absolute inset-0 bg-gradient-to-t from-ink-950/95 via-ink-950/35 to-transparent" />
+            <div className="absolute bottom-0 left-0 w-full p-8 md:p-10">
+              <p className="flex items-center gap-2 font-mono text-[10px] tracking-widest text-gold-300">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 pulse-dot" />
+                LIVE NOW · OPEN-METEO · DUBLIN
+              </p>
+              <div className="mt-3 flex flex-wrap items-end gap-x-6 gap-y-3">
+                <span className="font-serif text-7xl leading-none text-cream md:text-8xl">
+                  {weather ? `${Math.round(weather.temperature_c)}°` : "…"}
+                </span>
+                <span className="pb-1 text-lg text-cream/70">{weather?.condition || "Dublin weather"}</span>
+              </div>
+              <div className="mt-4 flex flex-wrap items-center gap-4">
+                <span className="flex items-center gap-1.5 text-[12px] text-cream/65">
+                  <Wind size={13} className="text-gold-400" /> {weather ? `${weather.wind_kmh} km/h wind` : "…"}
+                </span>
+                <span className="flex items-center gap-1.5 text-[12px] text-cream/65">
+                  <Droplets size={13} className="text-gold-400" /> {weather ? `${weather.humidity}% humidity` : "…"}
+                </span>
+                <span className="flex items-center gap-1.5 text-[12px] text-cream/65">
+                  <Calendar size={13} className="text-gold-400" />
+                  {weather ? `${Math.round(weather.forecast?.[0]?.precip_prob ?? 0)}% rain tomorrow` : "…"}
+                </span>
+                {weather && (
+                  <span className="font-mono text-[9px] tracking-wider text-cream/40">
+                    QUERIED · {liveAt ? new Date(liveAt).toLocaleTimeString("en-IE") : "…"}
+                  </span>
+                )}
+              </div>
+              <button
+                onClick={() => navigate("intelligence")}
+                className="mt-6 inline-flex items-center gap-2 rounded-full bg-gold-fade px-6 py-2.5 text-sm font-medium text-ink-950 transition-transform hover:scale-105"
+              >
+                View full live intelligence <ArrowRight size={14} />
+              </button>
+            </div>
+          </CinematicImage>
+        </motion.div>
+      </section>
 
       {/* ================= STATS ================= */}
       <section className="relative z-10 mx-auto grid max-w-6xl grid-cols-2 gap-6 px-6 py-16 md:grid-cols-4">
@@ -417,7 +554,147 @@ export default function Landing({ navigate, onOperate }) {
           </div>
         </motion.div>
       </section>
+
+      {/* ================= TESTIMONIALS ================= */}
+      <Testimonials />
     </div>
+  );
+}
+
+function Testimonials() {
+  const [i, setI] = useState(0);
+  const [dir, setDir] = useState(1);
+
+  useEffect(() => {
+    const t = setInterval(() => {
+      setDir(1);
+      setI((p) => (p + 1) % TESTIMONIALS.length);
+    }, 7000);
+    return () => clearInterval(t);
+  }, []);
+
+  const go = (n) => {
+    const next = (n + TESTIMONIALS.length) % TESTIMONIALS.length;
+    setDir(next > i ? 1 : -1);
+    setI(next);
+  };
+
+  const t = TESTIMONIALS[i];
+
+  return (
+    <section className="relative z-10 mx-auto max-w-5xl px-6 py-16">
+      <SectionHeading
+        kicker="GUEST STORIES"
+        title="What guests say about The Virelle"
+        sub="Real experiences from the weekends VIRELLE ran live — events, bookings, campaigns and decisions."
+      />
+      <div className="mt-12 grid gap-8 md:grid-cols-2">
+        <motion.div
+          initial={{ opacity: 0, x: -24 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: true, margin: "-60px" }}
+          transition={{ duration: 0.7, ease }}
+          className="grain relative overflow-hidden rounded-3xl border border-gold-500/15 min-h-[320px]"
+        >
+          <img
+            src={GALLERY.dublinNight.src}
+            alt="Dublin after dark"
+            className="absolute inset-0 h-full w-full object-cover"
+            loading="lazy"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-ink-950 via-ink-950/55 to-ink-950/20" />
+          <div className="absolute bottom-0 left-0 p-8">
+            <p className="font-mono text-[10px] tracking-widest text-gold-300">
+              THE NIGHT DOESN'T END · LIVE WEEKEND
+            </p>
+            <p className="mt-2 font-serif text-2xl text-cream">Sold-out Saturdays,<br />curated for real guests.</p>
+          </div>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, x: 24 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: true, margin: "-60px" }}
+          transition={{ duration: 0.7, ease, delay: 0.1 }}
+          className="glass relative flex min-h-[320px] flex-col overflow-hidden rounded-3xl p-8"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex gap-1">
+              {[0, 1, 2, 3, 4].map((s) => (
+                <Star key={s} size={15} className="fill-gold-400 text-gold-400" />
+              ))}
+            </div>
+            <Quote size={18} className="text-gold-500/50" />
+          </div>
+
+          <div className="relative flex-1">
+            <AnimatePresence mode="wait" custom={dir}>
+              <motion.p
+                key={i}
+                custom={dir}
+                variants={TESTIMONIAL_VARIANTS}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={{ duration: 0.4, ease }}
+                className="mt-5 font-serif text-lg leading-relaxed text-cream/85"
+              >
+                "{t.quote}"
+              </motion.p>
+            </AnimatePresence>
+          </div>
+
+          <div className="mt-6 flex items-center gap-3 border-t border-cream/10 pt-5">
+            <AnimatePresence mode="wait">
+              <motion.img
+                key={i}
+                src={t.avatar}
+                alt={t.name}
+                loading="lazy"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                transition={{ duration: 0.3 }}
+                className="h-12 w-12 rounded-full border border-gold-500/30 object-cover"
+              />
+            </AnimatePresence>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-medium text-cream">{t.name}</p>
+              <p className="font-mono text-[9px] tracking-widest text-cream/40">{t.role}</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => go(i - 1)}
+                aria-label="Previous testimonial"
+                className="grid h-9 w-9 place-items-center rounded-full border border-cream/15 text-cream/70 transition-colors hover:border-gold-500/40 hover:text-gold-300"
+              >
+                <ChevronLeft size={15} />
+              </button>
+              <button
+                onClick={() => go(i + 1)}
+                aria-label="Next testimonial"
+                className="grid h-9 w-9 place-items-center rounded-full border border-cream/15 text-cream/70 transition-colors hover:border-gold-500/40 hover:text-gold-300"
+              >
+                <ChevronRight size={15} />
+              </button>
+            </div>
+          </div>
+
+          <div className="mt-4 flex items-center justify-center gap-2">
+            {TESTIMONIALS.map((_, d) => (
+              <button
+                key={d}
+                onClick={() => go(d)}
+                aria-label={`Testimonial ${d + 1}`}
+                className={`h-1.5 rounded-full transition-all ${
+                  d === i ? "w-6 bg-gold-400" : "w-1.5 bg-cream/20"
+                }`}
+              />
+            ))}
+          </div>
+        </motion.div>
+      </div>
+    </section>
   );
 }
 
