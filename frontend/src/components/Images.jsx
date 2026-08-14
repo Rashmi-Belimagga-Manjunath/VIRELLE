@@ -99,12 +99,12 @@ export const PORTRAITS = [
     alt: "Julian Mercer",
   },
   {
-    src: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?q=80&w=800&auto=format&fit=crop",
-    alt: "Amelia Vance",
+    src: "https://images.unsplash.com/photo-1580489944761-15a19d654956?q=80&w=800&auto=format&fit=crop",
+    alt: "Amelia Bennett",
   },
   {
     src: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=800&auto=format&fit=crop",
-    alt: "Alexander Reid",
+    alt: "Alexander Sterling",
   },
 ];
 

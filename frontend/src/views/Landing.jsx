@@ -1,11 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { motion, useMotionValue, useSpring, useTransform, AnimatePresence } from "framer-motion";
 import {
-  Radar,
-  Sparkles,
-  Code2,
-  Megaphone,
-  Landmark,
   ArrowRight,
   Activity,
   Zap,
@@ -22,7 +17,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { TEAM, STAGES, MISSION_SUGGESTIONS } from "../constants.jsx";
-import { GALLERY, WEATHER_IMAGES } from "../components/Images.jsx";
+import { GALLERY, WEATHER_IMAGES, PORTRAITS } from "../components/Images.jsx";
 import CinematicImage from "../components/CinematicImage.jsx";
 import LiveWeatherCard from "../components/LiveWeatherCard.jsx";
 import { livePayload } from "../api.js";
@@ -66,14 +61,6 @@ const TESTIMONIAL_VARIANTS = {
   enter: (d) => ({ x: d * 70, opacity: 0 }),
   center: { x: 0, opacity: 1 },
   exit: (d) => ({ x: d * -70, opacity: 0 }),
-};
-
-const ICONS = {
-  radar: Radar,
-  sparkles: Sparkles,
-  code: Code2,
-  megaphone: Megaphone,
-  landmark: Landmark,
 };
 
 function ParticleField() {
@@ -437,27 +424,30 @@ export default function Landing({ navigate, onOperate }) {
           sub="Each agent's output becomes the next agent's input. The chain cannot be skipped — research before design, design before build, build before demand, and everything before the final decision."
         />
         <div className="mt-12 grid gap-5 md:grid-cols-5">
-          {TEAM.map((t, i) => {
-            const Icon = ICONS[t.icon];
-            return (
-              <motion.div
-                key={t.id}
-                initial={{ opacity: 0, y: 26 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-60px" }}
-                transition={{ delay: i * 0.1, duration: 0.6, ease }}
-                className="group relative overflow-hidden rounded-2xl border p-6 transition-colors hover:-translate-y-1"
-                style={{ borderColor: `${t.color}22`, background: t.accent }}
+          {TEAM.map((t, i) => (
+            <motion.div
+              key={t.id}
+              initial={{ opacity: 0, y: 26 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-60px" }}
+              transition={{ delay: i * 0.1, duration: 0.6, ease }}
+              className="group relative overflow-hidden rounded-2xl border p-6 transition-colors hover:-translate-y-1"
+              style={{ borderColor: `${t.color}22`, background: t.accent }}
+            >
+              <span className="font-mono text-[11px]" style={{ color: t.color }}>
+                {t.number}
+              </span>
+              <div
+                className="relative mt-4 h-14 w-14 overflow-hidden rounded-full transition-transform group-hover:scale-110"
+                style={{ boxShadow: `0 0 0 3px ${t.color}33, 0 0 24px -6px ${t.color}88` }}
               >
-                <span className="font-mono text-[11px]" style={{ color: t.color }}>
-                  {t.number}
-                </span>
-                <div
-                  className="mt-4 grid h-10 w-10 place-items-center rounded-xl transition-transform group-hover:scale-110"
-                  style={{ background: `${t.color}1f`, border: `1px solid ${t.color}33` }}
-                >
-                  <Icon size={18} style={{ color: t.color }} />
-                </div>
+                <img
+                  src={PORTRAITS[i].src}
+                  alt={PORTRAITS[i].alt}
+                  className="h-full w-full object-cover"
+                  loading="lazy"
+                />
+              </div>
                 <h3 className="mt-4 font-serif text-xl text-cream">{t.name}</h3>
                 <p className="mt-0.5 text-[11px] tracking-wide text-cream/45">{t.title}</p>
                 <p className="mt-3 text-sm italic leading-relaxed text-cream/60">
@@ -473,8 +463,7 @@ export default function Landing({ navigate, onOperate }) {
                   />
                 )}
               </motion.div>
-            );
-          })}
+          ))}
         </div>
       </section>
 
