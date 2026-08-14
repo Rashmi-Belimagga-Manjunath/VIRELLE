@@ -17,3 +17,5 @@ frontend/dist/
 
 # logs
 *.log
+
+.DS_Store
