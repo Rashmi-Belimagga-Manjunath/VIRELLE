@@ -25,9 +25,12 @@ COMMAND_PERSONA = (
     "live data and begin the operation. Keep replies concise and luxurious.\n\n"
     "GROUNDING RULES:\n"
     "- When asked about the hotel's own services — dining, restaurant, spa, "
-    "rooftop bar, facilities, opening hours, packages, prices, contact details, "
-    "or the weather and cultural events in Dublin — ALWAYS retrieve the real "
+    "rooftop bar, facilities, opening hours, packages, prices, room availability, "
+    "contact details, or the weather and cultural events in Dublin — ALWAYS retrieve the real "
     "data with the available tools and answer only from what they return.\n"
+    "- When asked what experiences, packages, rooms or offers are available, "
+    "answer with the real list from the database. Only speak of creating "
+    "something brand new if the customer explicitly asks to design one.\n"
     "- If a request is outside what VIRELLE can retrieve (for example ordering "
     "food from an external delivery service like Domino's, booking taxis or "
     "flights, or anything with no tool), decline politely and honestly: explain "
@@ -55,6 +58,13 @@ CONCIERGE_TOOLS = [
         "parameters": {"type": "object", "properties": {}},
     },
     {
+        "name": "room_availability",
+        "description": "Query real room availability for The Virelle Dublin from the hotel database, by number of days ahead. Use for any question about staying, nights, rooms or availability.",
+        "parameters": {"type": "object", "properties": {
+            "days": {"type": "integer", "description": "Days ahead to check, default 7"},
+        }},
+    },
+    {
         "name": "live_weather",
         "description": "Fetch the current weather in Dublin live from Open-Meteo. Use for any weather, temperature or what-to-wear question.",
         "parameters": {"type": "object", "properties": {}},
@@ -68,13 +78,10 @@ CONCIERGE_TOOLS = [
 
 TRIGGER_PATTERNS = [
     r"opportunit",
-    r"weekend",
-    r"unsold|empty rooms|available rooms|vacancy|rooms left",
-    r"experienc",
-    r"find|create|launch|build|sell|boost|grow|increase",
-    r"revenue|profit|demand|guests",
-    r"recover|bookings|occupancy",
-    r"what.{0,20}(happen|on|do)",
+    r"unsold|empty rooms|rooms left|occupancy",
+    r"revenue|profit|demand|boost|grow|increase",
+    r"launch|create (a|an|the|a new )?[a-z\- ]{0,30}(experience|offer|package|deal)",
+    r"fill.{0,15}(room|seat|bed)|sell.{0,15}(room|experience|package)",
 ]
 
 SESSIONS: dict[str, list[dict]] = {}
@@ -128,6 +135,15 @@ def _run_concierge_tool(name: str, args: dict) -> str:
                 f"Address: 4 College Green, Dublin 2, Ireland. "
                 f"Concierge: +353 1 555 0147. Email: concierge@virelle.ie."
             )
+        if name == "room_availability":
+            days = int(args.get("days", 7))
+            r = hotel_db.get_available_inventory(days=days)
+            lines = [
+                f"- {i['stay_date']}: {i['rooms_sold']}/{i['rooms_available']} rooms booked, "
+                f"{i['remaining']} remaining ({i['occupancy']}% occupied)"
+                for i in r.get("inventory", [])
+            ]
+            return "\n".join(lines) or f"No inventory recorded for the next {days} days."
         if name == "live_weather":
             return live_data.summarize_weather(live_data.fetch_weather())
         if name == "city_events":
