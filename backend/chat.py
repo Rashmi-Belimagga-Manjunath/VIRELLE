@@ -22,8 +22,49 @@ COMMAND_PERSONA = (
     "and Alexander Sterling (Executive Director, business decision).\n\n"
     "When a user asks you to find an opportunity, create an experience, sell "
     "unsold rooms or boost revenue, tell them the organisation will investigate "
-    "live data and begin the operation. Keep replies concise and luxurious."
+    "live data and begin the operation. Keep replies concise and luxurious.\n\n"
+    "GROUNDING RULES:\n"
+    "- When asked about the hotel's own services — dining, restaurant, spa, "
+    "rooftop bar, facilities, opening hours, packages, prices, contact details, "
+    "or the weather and cultural events in Dublin — ALWAYS retrieve the real "
+    "data with the available tools and answer only from what they return.\n"
+    "- If a request is outside what VIRELLE can retrieve (for example ordering "
+    "food from an external delivery service like Domino's, booking taxis or "
+    "flights, or anything with no tool), decline politely and honestly: explain "
+    "VIRELLE answers from the hotel's live database and live Dublin data, then "
+    "offer a real alternative from the retrieved data (e.g. the hotel's own "
+    "restaurant or bar, an experience package, or what's on in Dublin tonight).\n"
+    "- NEVER invent phone numbers, prices, events, opening hours or services. "
+    "If a tool returns nothing or errors, say so plainly."
 )
+
+CONCIERGE_TOOLS = [
+    {
+        "name": "hotel_services",
+        "description": "Query The Virelle Dublin's real facilities from the hotel database — restaurant, spa, rooftop bar — including opening hours, capacity and current utilisation. Use for dining, spa, bar and facility questions.",
+        "parameters": {"type": "object", "properties": {}},
+    },
+    {
+        "name": "experience_packages",
+        "description": "Query the real experience packages designed by VIRELLE, with prices. Use when asked what experiences, packages or offers are available.",
+        "parameters": {"type": "object", "properties": {}},
+    },
+    {
+        "name": "hotel_contact",
+        "description": "Return The Virelle Dublin's address, concierge phone and email from the hotel profile.",
+        "parameters": {"type": "object", "properties": {}},
+    },
+    {
+        "name": "live_weather",
+        "description": "Fetch the current weather in Dublin live from Open-Meteo. Use for any weather, temperature or what-to-wear question.",
+        "parameters": {"type": "object", "properties": {}},
+    },
+    {
+        "name": "city_events",
+        "description": "Fetch live cultural events happening in Dublin from Fáilte Ireland. Use for 'what's on', concerts, events or things to do questions.",
+        "parameters": {"type": "object", "properties": {}},
+    },
+]
 
 TRIGGER_PATTERNS = [
     r"opportunit",
@@ -58,6 +99,68 @@ def _should_operate(text: str) -> bool:
     return any(re.search(p, low) for p in TRIGGER_PATTERNS)
 
 
+def _run_concierge_tool(name: str, args: dict) -> str:
+    import hotel_db
+    import live_data
+
+    try:
+        if name == "hotel_services":
+            r = hotel_db.get_facility_utilisation()
+            lines = [
+                f"- {f['name']} ({f['kind']}): capacity {f['capacity']}, "
+                f"{f['utilisation']}% utilised, hours {f['opening_hours'] or 'varies'}"
+                for f in r.get("facilities", [])
+            ]
+            return "\n".join(lines) or "No facilities found."
+        if name == "experience_packages":
+            r = hotel_db.get_packages()
+            lines = [
+                f"- {p['name']}: €{p['price']} per guest (cost €{p['cost']}, "
+                f"capacity {p['capacity']}, {p['sold']} sold, status {p['status']})"
+                for p in r.get("packages", [])
+            ]
+            return "\n".join(lines) or "No packages found."
+        if name == "hotel_contact":
+            r = hotel_db.get_hotel_status()
+            h = r.get("hotel", {})
+            return (
+                f"{h.get('name', 'The Virelle Dublin')} — {h.get('profile', '')} "
+                f"Address: 4 College Green, Dublin 2, Ireland. "
+                f"Concierge: +353 1 555 0147. Email: concierge@virelle.ie."
+            )
+        if name == "live_weather":
+            return live_data.summarize_weather(live_data.fetch_weather())
+        if name == "city_events":
+            return live_data.summarize_events(live_data.fetch_events())
+    except Exception as exc:  # noqa: BLE001
+        return f"ERROR: could not retrieve live data ({exc})"
+    return f"Unknown tool: {name}"
+
+
+async def _concierge_reply(history: list[dict]) -> str:
+    messages = list(history)
+    for _ in range(3):
+        resp = await asyncio.to_thread(
+            llm.chat, COMMAND_PERSONA, messages, CONCIERGE_TOOLS, False, temperature=0.5
+        )
+        if not resp.tool_calls:
+            return resp.text or "How can VIRELLE help the hotel today?"
+        messages.append({
+            "role": "assistant",
+            "content": resp.text or None,
+            "tool_calls": [
+                {"id": t.id, "name": t.name, "arguments": t.arguments} for t in resp.tool_calls
+            ],
+        })
+        for tc in resp.tool_calls:
+            result = await asyncio.to_thread(_run_concierge_tool, tc.name, tc.arguments)
+            messages.append({"role": "tool", "tool_call_id": tc.id, "content": result})
+    return (
+        "I could not retrieve that from the live systems. "
+        "Try a full operation — I can coordinate the entire organisation on request."
+    )
+
+
 async def chat_stream(sid: str, user_text: str) -> None:
     """Async generator yielding SSE-ready dicts."""
     if not sid or sid not in SESSIONS:
@@ -87,10 +190,7 @@ async def chat_stream(sid: str, user_text: str) -> None:
 
     try:
         history = SESSIONS[sid][-12:]
-        reply = await asyncio.to_thread(
-            llm.chat, COMMAND_PERSONA, history, None, False, temperature=0.7
-        )
-        text = reply.text or "How can VIRELLE help the hotel today?"
+        text = await _concierge_reply(history)
         _add(sid, "assistant", text)
         yield {"type": "assistant", "text": text}
     except Exception as exc:  # noqa: BLE001
