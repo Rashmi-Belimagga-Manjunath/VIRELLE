@@ -30,16 +30,26 @@ export default function App() {
     return () => window.removeEventListener("hashchange", onHash);
   }, []);
 
-  useEffect(() => {
+  const checkHealth = useCallback(() => {
     fetchHealth()
       .then((h) =>
         setProvider({
           ok: h.provider !== "none",
           label: h.provider === "none" ? "No LLM key" : `${h.provider} · ${h.model}`,
+          state: "ok",
         })
       )
-      .catch(() => setProvider({ ok: false, label: "Backend offline" }));
+      .catch(() =>
+        setProvider({ ok: false, label: "Backend offline", state: "retrying" })
+      );
   }, []);
+
+  useEffect(() => {
+    setProvider({ ok: false, label: "Checking", state: "connecting" });
+    checkHealth();
+    const t = setInterval(checkHealth, 12000);
+    return () => clearInterval(t);
+  }, [checkHealth]);
 
   const navigate = useCallback((id) => {
     window.location.hash = `#/${id}`;
@@ -57,9 +67,21 @@ export default function App() {
       {!provider.ok && (
         <div className="relative z-40 border-b border-amber-500/20 bg-amber-500/10 px-6 py-2.5 text-center">
           <p className="text-[12px] text-amber-200">
-            <span className="font-mono text-[10px] tracking-widest">STATIC PREVIEW · </span>
-            Live features (chat, data, booking) need the app server. Open this repo on GitHub →
-            <span className="font-mono"> Code → Codespaces</span> for the full live experience.
+            {provider.state === "connecting" ? (
+              <span>Connecting to the live VIRELLE backend…</span>
+            ) : (
+              <>
+                <span className="font-mono text-[10px] tracking-widest">WAKING LIVE BACKEND · </span>
+                The free-tier server spins down when idle and is waking up — this can take up to a
+                minute. Live features resume automatically.
+                <button
+                  onClick={checkHealth}
+                  className="ml-3 rounded border border-amber-400/40 px-2 py-0.5 font-mono text-[10px] uppercase tracking-widest text-amber-200 hover:bg-amber-400/10"
+                >
+                  Recheck
+                </button>
+              </>
+            )}
           </p>
         </div>
       )}
