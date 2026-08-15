@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { NAV_ITEMS } from "./constants.jsx";
-import { health as fetchHealth } from "./api.js";
+import { health as fetchHealth, operations as fetchOperations } from "./api.js";
 import Landing from "./views/Landing.jsx";
 import Command from "./views/Command.jsx";
 import Operations from "./views/Operations.jsx";
@@ -61,6 +61,24 @@ export default function App() {
     setOpId(id);
     navigate("operations");
   }, [navigate]);
+
+  useEffect(() => {
+    let mounted = true;
+    const sync = () =>
+      fetchOperations()
+        .then((r) => {
+          const ops = r.operations || [];
+          const latest = ops.find((o) => o.status === "complete") || ops[0];
+          if (latest && mounted) setOpId((cur) => cur ?? latest.id);
+        })
+        .catch(() => {});
+    sync();
+    const t = setInterval(sync, 15000);
+    return () => {
+      mounted = false;
+      clearInterval(t);
+    };
+  }, []);
 
   return (
     <div className="relative min-h-screen bg-ink-950 text-cream font-sans">
