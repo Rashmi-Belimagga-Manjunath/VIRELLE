@@ -290,7 +290,7 @@ export default function Landing({ navigate, onOperate }) {
             EST. 2026 · DUBLIN
           </motion.p>
 
-          <h1 className="max-w-6xl text-center font-serif leading-[1.04] text-cream text-[clamp(2.4rem,6vw,5.4rem)]">
+          <h1 className="mx-auto max-w-6xl text-center font-serif leading-[1.04] text-cream text-[clamp(2.4rem,6vw,5.4rem)]">
             <Word stagger delay={0.1}>From</Word>{" "}
             <Word stagger delay={0.2}>live</Word>{" "}
             <span className="shine-text">
@@ -308,7 +308,7 @@ export default function Landing({ navigate, onOperate }) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 1.0, duration: 0.8 }}
-            className="mt-7 max-w-2xl text-center text-lg font-light leading-relaxed text-cream/70"
+            className="mx-auto mt-7 max-w-2xl text-center text-lg font-light leading-relaxed text-cream/70"
           >
             VIRELLE is a fully agentic AI organisation for luxury hospitality.
             <br className="hidden sm:block" />
