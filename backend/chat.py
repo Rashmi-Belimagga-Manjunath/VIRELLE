@@ -68,6 +68,15 @@ CONCIERGE_TOOLS = [
         "description": "Fetch live cultural events happening in Dublin from Fáilte Ireland. Use for 'what's on', concerts, events or things to do questions.",
         "parameters": {"type": "object", "properties": {}},
     },
+    {
+        "name": "reserve_product",
+        "description": "Reserve the latest designed VIRELLE experience for a guest. Requires the guest's full name and email. Returns a booking reference. Use when the guest asks to book, reserve, secure or take the experience live.",
+        "parameters": {"type": "object", "properties": {
+            "name": {"type": "string", "description": "Guest's full name"},
+            "email": {"type": "string", "description": "Guest's email address"},
+            "guests": {"type": "integer", "description": "Number of guests, default 2"},
+        }, "required": ["name", "email"]},
+    },
 ]
 
 TRIGGER_PATTERNS = [
@@ -98,6 +107,31 @@ def _should_operate(text: str) -> bool:
     if text.strip().startswith("/operate"):
         return True
     return any(re.search(p, low) for p in TRIGGER_PATTERNS)
+
+
+def _reserve_latest_product(args: dict) -> str:
+    """Book the most recently designed experience, using the hotel database."""
+    import hotel_db
+
+    latest = next((o for o in reversed(list(pipeline.OPS.values())) if o.product), None)
+    if not latest or not latest.product:
+        return "There's no experience ready to book yet — ask me to design one first."
+    product = latest.product
+    cfg = product.get("booking_config", {})
+    price = float(cfg.get("price", product.get("price", 695)))
+    date = cfg.get("date", product.get("stay_date"))
+    booking = hotel_db.create_booking(
+        str(args.get("name", "")),
+        str(args.get("email", "")),
+        product.get("experience_name", "VIRELLE Experience"),
+        date,
+        int(args.get("guests", 2)),
+        price,
+    )
+    return (
+        f"Booking {booking['booking_ref']} confirmed — {booking['experience']} on "
+        f"{booking['stay_date']} for {booking['guests']} guest(s) at €{booking['price']:.0f}."
+    )
 
 
 def _run_concierge_tool(name: str, args: dict) -> str:
@@ -147,6 +181,8 @@ def _run_concierge_tool(name: str, args: dict) -> str:
             return live_data.summarize_weather(live_data.fetch_weather())
         if name == "city_events":
             return live_data.summarize_events(live_data.fetch_events())
+        if name == "reserve_product":
+            return _reserve_latest_product(args)
     except Exception as exc:  # noqa: BLE001
         return f"ERROR: could not retrieve live data ({exc})"
     return f"Unknown tool: {name}"
