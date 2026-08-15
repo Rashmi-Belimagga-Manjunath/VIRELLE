@@ -49,7 +49,7 @@ OPS: dict[str, "Operation"] = {}
 LIVE_CONNECTION_NAMES = {
     "Fáilte Ireland Events API": "events",
     "Open-Meteo Weather API": "weather",
-    "Dublin Destination Signals": "destination",
+    "Fáilte Ireland Tourism": "destination",
 }
 MCP_CONNECTION_NAME = "Hospitality Operations MCP"
 HOTEL_DB_CONNECTION_NAME = "Hotel Database (SQLite)"
@@ -177,9 +177,9 @@ async def probe_connections() -> dict:
         status = payload["status"]
         detail = None
         if status == "connected" and s:
-            detail = (f"Dublin interest {s['trend']} ({s['trend_pct']:+}% WoW) · "
-                      f"{s['latest_daily_views']:,} views latest day")
-        CONNECTIONS.set("Dublin Destination Signals", status, payload["fetched_at"],
+            detail = (f"{s.get('total_attractions'):,} registered Dublin attractions "
+                      f"& experiences · {s.get('tours_and_experiences'):,} tours/experiences")
+        CONNECTIONS.set("Fáilte Ireland Tourism", status, payload["fetched_at"],
                         detail or payload.get("error"))
         results["destination"] = {"status": status, "detail": detail or payload.get("error"),
                                   "fetched_at": payload["fetched_at"]}
@@ -371,7 +371,7 @@ async def _gather_researcher_data(op: Operation) -> None:
          lambda p: live_data.summarize_events(p, top=8)),
         ("Open-Meteo Weather API", "query_live_weather", live_data.fetch_weather(),
          live_data.summarize_weather),
-        ("Dublin Destination Signals", "query_destination_interest",
+        ("Fáilte Ireland Tourism", "query_destination_interest",
          live_data.fetch_destination_interest(), live_data.summarize_destination),
     ]
     for conn_key, tool_name, payload, summarize in sources:

@@ -22,7 +22,7 @@ import { useOperation } from "../hooks/useOperation.js";
 const CONN_ICONS = {
   "Fáilte Ireland Events API": Cloud,
   "Open-Meteo Weather API": CloudSun,
-  "Dublin Destination Signals": Activity,
+  "Fáilte Ireland Tourism": Activity,
   "Hospitality Operations MCP": Server,
   "Hotel Database (SQLite)": Database,
 };
@@ -344,7 +344,7 @@ function Connections({ conns, running }) {
           >
             <div className="mt-4 space-y-3">
               {conns.length === 0 &&
-                ["Fáilte Ireland Events API", "Open-Meteo Weather API", "Dublin Destination Signals", "Hospitality Operations MCP", "Hotel Database (SQLite)"].map((n) => (
+                ["Fáilte Ireland Events API", "Open-Meteo Weather API", "Fáilte Ireland Tourism", "Hospitality Operations MCP", "Hotel Database (SQLite)"].map((n) => (
                   <ConnRow key={n} name={n} status="idle" />
                 ))}
               {conns.map((c) => (

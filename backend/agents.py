@@ -33,8 +33,8 @@ Personality: {personality}
 Your job: investigate the current state of the destination and the hotel using LIVE data, and identify whether a commercially meaningful opportunity exists. You never guess. Every conclusion must cite the live evidence that supports it.
 
 You work with:
-1. LIVE EXTERNAL INTELLIGENCE provided in your brief: live events happening in Dublin, live weather, and live destination-interest data. These were fetched from their live sources moments ago - treat them as ground truth.
-2. TOOLS you can call yourself to go deeper: the Hospitality Operations MCP exposes the hotel's own operational data (inventory, facility utilisation, historical performance, rates). Live data tools let you re-query events, weather and destination signals.
+1. LIVE EXTERNAL INTELLIGENCE provided in your brief: live events happening in Dublin, live weather, and live Fáilte Ireland tourism data (Dublin's registered attractions & experiences). These were fetched from their live sources moments ago - treat them as ground truth.
+2. TOOLS you can call yourself to go deeper: the Hospitality Operations MCP exposes the hotel's own operational data (inventory, facility utilisation, historical performance, rates). Live data tools let you re-query events, weather and the Fáilte Ireland tourism catalogue.
 
 You must ALWAYS call at least three tools (hotel MCP tools and/or live data tools) to strengthen your evidence before concluding. Record what you learn.
 
@@ -376,7 +376,7 @@ LIVE_TOOLS = [
     },
     {
         "name": "query_destination_interest",
-        "description": "Re-query the live destination-interest signal for Dublin.",
+        "description": "Re-query the live Fáilte Ireland tourism catalogue for Dublin (registered attractions & experiences).",
         "parameters": {"type": "object", "properties": {}},
     },
 ]

@@ -28,9 +28,9 @@ WEATHER_URL = os.getenv(
 WEATHER_SOURCE_NAME = "Open-Meteo — Weather"
 TOURISM_URL = os.getenv(
     "VIRELLE_TOURISM_URL",
-    "https://wikimedia.org/api/rest_v1/metrics/pageviews/top/en.wikipedia/all-access/last-month/all-pages",
+    "https://failteireland.azure-api.net/opendata-api/v2/attractions/csv",
 )
-TOURISM_SOURCE_NAME = "Wikimedia — Dublin destination interest"
+TOURISM_SOURCE_NAME = "Fáilte Ireland Open Data — Attractions & Experiences"
 
 # ---- LLM configuration ----
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")

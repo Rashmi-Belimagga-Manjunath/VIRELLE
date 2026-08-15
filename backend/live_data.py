@@ -340,48 +340,50 @@ def fetch_weather(lat: float = None, lon: float = None, days: int = 7) -> dict:
 
 
 # --------------------------------------------------------------------------
-# Destination interest - Wikipedia pageviews for Dublin (live tourism signal)
+# Tourism - Fáilte Ireland Open Data (Dublin attractions & experiences)
 # --------------------------------------------------------------------------
 
 def fetch_destination_interest() -> dict:
+    """Live Fáilte Ireland tourism catalogue for Dublin (attractions & experiences).
+
+    The upstream CSV is always fetched live at the moment of use and filtered
+    to Dublin County, giving a real picture of the destination's visitor offer.
+    """
     fetched_at = dt.datetime.now().isoformat(timespec="seconds")
     status = "connected"
     error = None
     result = None
     try:
-        today = dt.date.today()
-        start = today - dt.timedelta(days=29)
-        url = (
-            "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/"
-            f"en.wikipedia/all-access/user/Dublin/daily/"
-            f"{start:%Y%m%d}/{today:%Y%m%d}"
-        )
-        payload, _ = _http_json(url)
-        items = payload.get("items", [])
-        views = [int(i["views"]) for i in items]
-        if views:
-            recent = sum(views[-7:])
-            previous = sum(views[-14:-7])
-            change = ((recent - previous) / previous * 100) if previous else 0.0
-            result = {
-                "article": "Dublin",
-                "latest_daily_views": views[-1],
-                "total_views_30d": sum(views),
-                "days_measured": len(views),
-                "trend_pct": round(change, 1),
-                "trend": "rising" if change > 5 else ("declining" if change < -5 else "steady"),
-                "as_of_day": items[-1]["timestamp"][:8],
-            }
-        else:
+        raw = _http_bytes(config.TOURISM_URL)
+        rows = list(csv.DictReader(io.StringIO(raw.decode("utf-8-sig"))))
+        dublin = [
+            r for r in rows
+            if (r.get("County") or "").strip().lower() == config.HOTEL_CITY.lower()
+        ]
+        tours = experiences = food_drink = 0
+        for r in dublin:
+            tags = " ".join((r.get("Tags") or "").split()).lower()
+            if "tour" in tags or "experience" in tags:
+                tours += 1
+            if any(k in tags for k in ("food", "drink", "restaurant", "pub", "cafe")):
+                food_drink += 1
+        result = {
+            "county": config.HOTEL_CITY,
+            "total_attractions": len(dublin),
+            "tours_and_experiences": tours,
+            "food_and_drink_venues": food_drink,
+            "as_of_day": dt.date.today().isoformat(),
+        }
+        if not dublin:
             status = "connected"
-            error = "No pageview data returned for Dublin."
+            error = "No tourism catalogue entries for Dublin."
     except Exception as exc:  # noqa: BLE001
         status = "error"
         error = f"{type(exc).__name__}: {exc}"
 
     return {
         "source": config.TOURISM_SOURCE_NAME,
-        "source_url": "https://wikimedia.org/api/rest_v1/metrics/pageviews",
+        "source_url": config.TOURISM_URL,
         "status": status,
         "error": error,
         "fetched_at": fetched_at,
@@ -444,10 +446,11 @@ def summarize_weather(weather: dict) -> str:
 def summarize_destination(dest: dict) -> str:
     s = dest.get("summary")
     if dest.get("status") != "connected" or not s:
-        return f"Live destination data unavailable ({dest.get('error')})."
+        return f"Live tourism catalogue unavailable ({dest.get('error')})."
     return (
-        f"Live destination interest (source: {dest['source']}, fetched {dest['fetched_at']}): "
-        f"Dublin pageviews are {s['trend']} ({s['trend_pct']:+}% week-on-week), "
-        f"{s['total_views_30d']:,} views across {s['days_measured']} days, "
-        f"latest day {s['latest_daily_views']:,}."
+        f"Live Fáilte Ireland tourism data (source: {dest['source']}, fetched {dest['fetched_at']}): "
+        f"Dublin has {s['total_attractions']:,} registered attractions & experiences, "
+        f"including {s['tours_and_experiences']:,} tours/experiences and "
+        f"{s['food_and_drink_venues']:,} food & drink venues. "
+        f"A broad, active visitor offer."
     )

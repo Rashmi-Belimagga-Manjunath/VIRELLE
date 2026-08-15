@@ -25,7 +25,7 @@ import { WEATHER_IMAGES, GALLERY } from "../components/Images.jsx";
 const CONN_META = {
   "Fáilte Ireland Events API": { icon: Cloud, note: "Live Irish tourism events feed" },
   "Open-Meteo Weather API": { icon: CloudSun, note: "Live Dublin forecast" },
-  "Dublin Destination Signals": { icon: Activity, note: "Live destination interest" },
+  "Fáilte Ireland Tourism": { icon: Activity, note: "Live Fáilte Ireland attractions & experiences" },
   "Hospitality Operations MCP": { icon: Server, note: "Hotel operational tools" },
   "Hotel Database (SQLite)": { icon: Database, note: "Real queryable hotel data" },
 };
