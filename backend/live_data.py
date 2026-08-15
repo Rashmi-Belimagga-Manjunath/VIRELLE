@@ -101,8 +101,10 @@ def _wikimedia_thumbnail(query: str) -> str:
     nothing useful is found.
     """
     query = (query or "").strip()
-    if not query or query in _WM_CACHE:
-        return _WM_CACHE.get(query, "")
+    if not query:
+        return ""
+    if query in _WM_CACHE:
+        return _WM_CACHE[query]
     api = ("https://commons.wikimedia.org/w/api.php?action=query&generator=search"
            "&gsrnamespace=6&gsrfiletype=bitmap&gsrlimit=5&prop=imageinfo&iiprop=url"
            "&iiurlwidth=900&format=json&gsrsearch=")
@@ -123,7 +125,7 @@ def _wikimedia_thumbnail(query: str) -> str:
                 _WM_CACHE[query] = thumb
                 return thumb
     except Exception:  # noqa: BLE001
-        pass
+        return ""  # transient failure (rate limit etc.) - NOT cached, retried next call
     _WM_CACHE[query] = ""
     return ""
 
@@ -148,7 +150,7 @@ def _enrich_event_images(events: list[dict], max_lookups: int = 12) -> None:
                 return url
         return ""
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=6) as ex:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=4) as ex:
         futures = {ex.submit(lookup, e): e for e in missing[:max_lookups]}
         for future in concurrent.futures.as_completed(futures):
             try:
