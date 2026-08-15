@@ -42,32 +42,6 @@ def _http_bytes(url: str, headers: dict | None = None) -> bytes:
 # Events - Fáilte Ireland Open Data (official Irish tourism events feed)
 # --------------------------------------------------------------------------
 
-EVENTS_CACHE = config.DATA_DIR / "events_cache.json"
-EVENTS_CACHE_TTL_S = 6 * 3600
-EVENTS_FAIL_TTL_S = 30 * 60
-
-
-def _read_events_cache():
-    if not EVENTS_CACHE.exists():
-        return None
-    try:
-        cached = json.loads(EVENTS_CACHE.read_text())
-        age = time.time() - EVENTS_CACHE.stat().st_mtime
-        max_age = EVENTS_CACHE_TTL_S if cached.get("ok") else EVENTS_FAIL_TTL_S
-        if age <= max_age:
-            return cached["payload"]
-    except Exception:  # noqa: BLE001
-        pass
-    return None
-
-
-def _write_events_cache(ok: bool, payload: dict) -> None:
-    try:
-        EVENTS_CACHE.write_text(json.dumps({"ok": ok, "payload": payload}))
-    except Exception:  # noqa: BLE001
-        pass
-
-
 def _parse_fi_date(value: str):
     value = (value or "").strip()
     for fmt in ("%d/%m/%Y", "%Y-%m-%d", "%d-%m-%Y"):
@@ -114,16 +88,10 @@ def _load_curated_events() -> list[dict]:
 def fetch_events(days_ahead: int = 14, county: str | None = "Dublin") -> dict:
     """Fetch live events from the Fáilte Ireland open data events API.
 
-    Responses are cached (6h on success, 30min on failure) so the free
-    bandwidth quota of the upstream feed is used sparingly. When the live
-    feed is unavailable or rate-limited, a curated snapshot of real Dublin
-    events is served instead so the chat never dead-ends.
+    The upstream feed is always queried live at the moment of use. When it
+    is unavailable or rate-limited, a curated snapshot of real Dublin events
+    is served instead so the chat never dead-ends.
     """
-    cached = _read_events_cache()
-    if cached is not None:
-        cached["cached"] = True
-        return cached
-
     fetched_at = dt.datetime.now().isoformat(timespec="seconds")
     status = "connected"
     error = None
@@ -197,7 +165,6 @@ def fetch_events(days_ahead: int = 14, county: str | None = "Dublin") -> dict:
             payload["error"] = None
             payload["source"] = "VIRELLE Dublin events feed"
             payload["source_url"] = ""
-    _write_events_cache(payload["status"] == "connected", payload)
     return payload
 
 
@@ -353,50 +320,21 @@ def _weather_from_wttr(lat: float, lon: float, days: int) -> dict:
     }
 
 
-WEATHER_CACHE = config.DATA_DIR / "weather_cache.json"
-WEATHER_CACHE_TTL_S = 15 * 60
-
-
-def _read_weather_cache():
-    if not WEATHER_CACHE.exists():
-        return None
-    try:
-        cached = json.loads(WEATHER_CACHE.read_text())
-        if time.time() - WEATHER_CACHE.stat().st_mtime <= WEATHER_CACHE_TTL_S:
-            return cached["payload"]
-    except Exception:  # noqa: BLE001
-        pass
-    return None
-
-
-def _write_weather_cache(payload: dict) -> None:
-    try:
-        WEATHER_CACHE.write_text(json.dumps({"payload": payload}))
-    except Exception:  # noqa: BLE001
-        pass
-
-
 def fetch_weather(lat: float = None, lon: float = None, days: int = 7) -> dict:
-    """Live weather for the hotel, cached 15 min, with a keyless fallback.
+    """Live weather, always queried at the moment of use.
 
     Open-Meteo is queried first; if it is rate-limited or unreachable, a
     second keyless provider (wttr.in) is used so the demo never dead-ends.
     """
     lat = lat or config.HOTEL_LAT
     lon = lon or config.HOTEL_LON
-    cached = _read_weather_cache()
-    if cached is not None:
-        cached["cached"] = True
-        return cached
 
     result = _weather_from_open_meteo(lat, lon, days)
     if result["status"] == "connected":
-        _write_weather_cache(result)
         return result
 
     fallback = _weather_from_wttr(lat, lon, days)
     if fallback["status"] == "connected":
-        _write_weather_cache(fallback)
         return fallback
     return result
 
