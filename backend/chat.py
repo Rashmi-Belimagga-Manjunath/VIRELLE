@@ -77,6 +77,11 @@ CONCIERGE_TOOLS = [
             "guests": {"type": "integer", "description": "Number of guests, default 2"},
         }, "required": ["name", "email"]},
     },
+    {
+        "name": "latest_plan",
+        "description": "Return the details of the most recently designed VIRELLE experience — its name, stay date, price, highlights, launch campaign and executive decision. Use when the guest asks to see, review, or be walked through the plan or experience that was just designed.",
+        "parameters": {"type": "object", "properties": {}},
+    },
 ]
 
 TRIGGER_PATTERNS = [
@@ -134,6 +139,37 @@ def _reserve_latest_product(args: dict) -> str:
     )
 
 
+def _latest_plan_summary() -> str:
+    """Human-readable summary of the most recently designed experience."""
+    latest = next((o for o in reversed(list(pipeline.OPS.values())) if o.product), None)
+    if not latest or not latest.product:
+        return "There's no designed experience yet — ask me to create one first."
+    p = latest.product
+    bc = p.get("booking_config") or {}
+    camp = latest.campaign or {}
+    dec = latest.decision or {}
+    price = bc.get("price") or p.get("price")
+    date = bc.get("date") or p.get("stay_date")
+    lines = [
+        f"Experience: {p.get('experience_name')}",
+        f"Tagline: {p.get('tagline')}",
+        f"Description: {p.get('description')}",
+        f"Stay date: {date}",
+        f"Price: €{price} per couple",
+    ]
+    if p.get("highlights"):
+        lines.append("Highlights: " + "; ".join(p.get("highlights", [])))
+    if p.get("includes"):
+        lines.append("Includes: " + "; ".join(i.get("label") for i in p.get("includes", [])))
+    if camp:
+        lines.append(f"Campaign: {camp.get('campaign_name')} — {camp.get('positioning')}")
+        if camp.get("call_to_action"):
+            lines.append(f"Call to action: {camp.get('call_to_action')}")
+    if dec:
+        lines.append(f"Decision: {dec.get('verdict')} — {(dec.get('decision_summary') or '').strip()}")
+    return "\n".join(lines)
+
+
 def _run_concierge_tool(name: str, args: dict) -> str:
     import hotel_db
     import live_data
@@ -183,6 +219,8 @@ def _run_concierge_tool(name: str, args: dict) -> str:
             return live_data.summarize_events(live_data.fetch_events())
         if name == "reserve_product":
             return _reserve_latest_product(args)
+        if name == "latest_plan":
+            return _latest_plan_summary()
     except Exception as exc:  # noqa: BLE001
         return f"ERROR: could not retrieve live data ({exc})"
     return f"Unknown tool: {name}"
