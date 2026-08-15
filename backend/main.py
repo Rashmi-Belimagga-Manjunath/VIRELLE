@@ -177,6 +177,24 @@ async def stream_operation(op_id: str):
     return StreamingResponse(gen(), media_type="text/event-stream")
 
 
+@app.get("/api/operations")
+async def list_operations():
+    """Most recent operations (lightweight summary for the Operations view)."""
+    items = [
+        {
+            "id": o.id,
+            "mission": o.mission,
+            "status": o.status,
+            "created_at": o.created_at,
+            "finished_at": o.finished_at,
+            "product": (o.product or {}).get("experience_name"),
+            "decision": (o.decision or {}).get("verdict") if o.decision else None,
+        }
+        for o in reversed(list(OPS.values()))
+    ]
+    return {"operations": items[:10]}
+
+
 class BookRequest(BaseModel):
     name: str
     email: str

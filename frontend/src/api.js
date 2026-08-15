@@ -27,6 +27,7 @@ export const organisation = () => jsonFetch("/organisation");
 export const startOperation = (mission) =>
   jsonFetch("/operation/start", { method: "POST", body: JSON.stringify({ mission }) });
 export const getOperation = (id) => jsonFetch(`/operation/${id}`);
+export const operations = () => jsonFetch("/operations");
 export const latestProduct = () => jsonFetch("/product/latest");
 export const createChatSession = () => jsonFetch("/chat", { method: "POST" });
 export const bookProduct = (payload) =>

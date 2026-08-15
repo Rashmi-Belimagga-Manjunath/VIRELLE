@@ -16,7 +16,7 @@ import {
 import { TEAM, STAGES, MISSION_SUGGESTIONS } from "../constants.jsx";
 import { GALLERY } from "../components/Images.jsx";
 import SectionHero from "../components/SectionHero.jsx";
-import { connections as fetchConnections, startOperation } from "../api.js";
+import { connections as fetchConnections, startOperation, operations as fetchOperations } from "../api.js";
 import { useOperation } from "../hooks/useOperation.js";
 
 const CONN_ICONS = {
@@ -28,16 +28,30 @@ const CONN_ICONS = {
 };
 
 export default function Operations({ opId, navigate }) {
-  const { op, connected } = useOperation(opId);
+  const [activeOpId, setActiveOpId] = useState(opId || null);
+  const { op, connected } = useOperation(activeOpId);
   const [mission, setMission] = useState("");
   const [starting, setStarting] = useState(false);
-  const [myOpId, setMyOpId] = useState(opId || null);
+  const [recentOps, setRecentOps] = useState([]);
   const [conns, setConns] = useState([]);
   const logRef = useRef(null);
 
-  const activeId = myOpId;
-  const active = activeId ? op : { ...op, status: "idle" };
+  const active = activeOpId ? op : { ...op, status: "idle" };
   const running = active.status === "running" || starting;
+
+  useEffect(() => {
+    if (opId) setActiveOpId(opId);
+  }, [opId]);
+
+  useEffect(() => {
+    const refresh = () =>
+      fetchOperations()
+        .then((r) => setRecentOps(r.operations || []))
+        .catch(() => {});
+    refresh();
+    const t = setInterval(refresh, 15000);
+    return () => clearInterval(t);
+  }, []);
 
   useEffect(() => {
     fetchConnections()
@@ -60,7 +74,10 @@ export default function Operations({ opId, navigate }) {
     setStarting(true);
     try {
       const res = await startOperation(target);
-      setMyOpId(res.operation_id);
+      setActiveOpId(res.operation_id);
+      fetchOperations()
+        .then((r) => setRecentOps(r.operations || []))
+        .catch(() => {});
     } catch (e) {
       alert(e.message);
     } finally {
@@ -130,13 +147,59 @@ export default function Operations({ opId, navigate }) {
         </div>
       </div>
 
-      {!activeId && !running && (
+      {!activeOpId && !running && (
         <div className="mt-10 text-center text-sm text-cream/45">
-          No operation yet. Enter a mission above to start the organisation.
+          {recentOps.length === 0
+            ? "No operation yet. Enter a mission above to start the organisation."
+            : "Select a recent operation below, or enter a new mission above."}
         </div>
       )}
 
-      {activeId && (
+      {recentOps.length > 0 && (
+        <div className="mt-8">
+          <p className="mb-3 font-mono text-[10px] tracking-widest text-cream/45">
+            RECENT OPERATIONS
+          </p>
+          <div className="chat-scroll flex gap-2 overflow-x-auto pb-2">
+            {recentOps.map((r) => {
+              const isActive = r.id === activeOpId;
+              const done = r.status === "complete";
+              const failed = r.status === "failed";
+              return (
+                <button
+                  key={r.id}
+                  onClick={() => setActiveOpId(r.id)}
+                  className={`flex min-w-[220px] flex-col gap-1.5 rounded-xl border px-4 py-3 text-left transition-all ${
+                    isActive
+                      ? "border-gold-500/50 bg-gold-500/10"
+                      : "border-cream/10 bg-ink-950/50 hover:border-gold-500/30"
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="truncate font-serif text-sm text-cream">
+                      {r.product || "—"}
+                    </span>
+                    <span
+                      className={`h-2 w-2 shrink-0 rounded-full ${
+                        done ? "bg-emerald-400" : failed ? "bg-rose-400" : "bg-amber-400 pulse-dot"
+                      }`}
+                    />
+                  </div>
+                  <span className="truncate font-mono text-[9.5px] leading-snug text-cream/45">
+                    {r.mission}
+                  </span>
+                  <span className="font-mono text-[9px] tracking-widest text-cream/30">
+                    {r.status.toUpperCase()} ·{" "}
+                    {new Date(r.created_at).toLocaleTimeString("en-IE")}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {activeOpId && (
         <div className="mt-10 grid gap-6 lg:grid-cols-12">
           {/* PIPELINE */}
           <div className="lg:col-span-7">
