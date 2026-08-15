@@ -140,7 +140,10 @@ class Operation:
         op.finished_at = data.get("finished_at")
         op.status = data.get("status", "complete")
         op.error = data.get("error")
-        op.agents = data.get("agents") or op.agents
+        agents = data.get("agents") or op.agents
+        if isinstance(agents, list):
+            agents = {a.get("id"): a for a in agents if a.get("id")}
+        op.agents = agents
         op.log = data.get("log") or []
         op.evidence = data.get("evidence") or []
         op.product = data.get("product")
