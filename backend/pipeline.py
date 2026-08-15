@@ -180,6 +180,8 @@ async def probe_connections() -> dict:
         if status == "connected" and s:
             detail = (f"{s.get('total_attractions'):,} registered Dublin attractions "
                       f"& experiences · {s.get('tours_and_experiences'):,} tours/experiences")
+            if payload.get("fallback"):
+                detail += " · curated snapshot"
         CONNECTIONS.set("Fáilte Ireland Tourism", status, payload["fetched_at"],
                         detail or payload.get("error"))
         results["destination"] = {"status": status, "detail": detail or payload.get("error"),

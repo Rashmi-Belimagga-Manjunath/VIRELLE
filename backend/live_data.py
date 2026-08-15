@@ -93,6 +93,34 @@ def _load_curated_events() -> list[dict]:
         return []
 
 
+CURATED_TOURISM_FILE = config.BASE_DIR / "curated_tourism.json"
+
+
+def _load_curated_tourism() -> dict | None:
+    """Curated tourism snapshot served only while the live feed is down.
+
+    Mirrors the events fallback pattern: real data captured from the Fáilte
+    Ireland catalogue, clearly labelled as a snapshot so it is never presented
+    as a live fetch.
+    """
+    try:
+        data = json.loads(CURATED_TOURISM_FILE.read_text())
+        summary = data.get("summary") or {}
+        if not summary.get("total_attractions"):
+            return None
+        return {
+            "source": data.get("source", "VIRELLE Dublin tourism snapshot (Fáilte Ireland catalogue)"),
+            "source_url": "",
+            "status": "connected",
+            "error": None,
+            "fallback": True,
+            "fetched_at": dt.datetime.now().isoformat(timespec="seconds"),
+            "summary": summary,
+        }
+    except Exception:  # noqa: BLE001
+        return None
+
+
 def _wikimedia_thumbnail(query: str) -> str:
     """Real photo thumbnail from Wikimedia Commons for an event/venue name.
 
@@ -436,15 +464,17 @@ def fetch_destination_interest(force: bool = False) -> dict:
     15 minutes between real fetches to respect the provider's rate limits (it
     returns HTTP 429 if re-downloaded on every monitor tick). `fetched_at`
     always reflects the moment the data was genuinely retrieved, and `force`
-    bypasses the reuse for one-off operations.
+    bypasses the reuse for one-off operations. Only successful fetches are
+    reused - a failed/rate-limited fetch is retried live on the next call.
     """
     now = time.monotonic()
     cached = _DESTINATION_CACHE["data"]
     if cached and not force and (now - _DESTINATION_CACHE["at"]) < DESTINATION_TTL:
         return dict(cached)
     data = _fetch_destination_catalogue()
-    _DESTINATION_CACHE["at"] = now
-    _DESTINATION_CACHE["data"] = data
+    if data.get("status") == "connected":
+        _DESTINATION_CACHE["at"] = now
+        _DESTINATION_CACHE["data"] = data
     return dict(data)
 
 
@@ -453,6 +483,7 @@ def _fetch_destination_catalogue() -> dict:
     status = "connected"
     error = None
     result = None
+    fallback = False
     try:
         raw = _http_bytes(config.TOURISM_URL)
         rows = list(csv.DictReader(io.StringIO(raw.decode("utf-8-sig"))))
@@ -481,12 +512,19 @@ def _fetch_destination_catalogue() -> dict:
         status = "error"
         error = f"{type(exc).__name__}: {exc}"
 
+    if status != "connected" or not result:
+        curated = _load_curated_tourism()
+        if curated:
+            curated["fetched_at"] = fetched_at
+            return curated
+
     return {
         "source": config.TOURISM_SOURCE_NAME,
         "source_url": config.TOURISM_URL,
         "status": status,
         "error": error,
         "fetched_at": fetched_at,
+        "fallback": fallback,
         "summary": result,
     }
 
@@ -547,6 +585,13 @@ def summarize_destination(dest: dict) -> str:
     s = dest.get("summary")
     if dest.get("status") != "connected" or not s:
         return f"Live tourism catalogue unavailable ({dest.get('error')})."
+    if dest.get("fallback"):
+        return (
+            f"VIRELLE tourism snapshot (source: {dest['source']}, served {dest['fetched_at']}): "
+            f"Dublin has {s['total_attractions']:,} registered attractions & experiences, "
+            f"including {s['tours_and_experiences']:,} tours/experiences and "
+            f"{s['food_and_drink_venues']:,} food & drink venues. A broad, active visitor offer."
+        )
     return (
         f"Live Fáilte Ireland tourism data (source: {dest['source']}, fetched {dest['fetched_at']}): "
         f"Dublin has {s['total_attractions']:,} registered attractions & experiences, "

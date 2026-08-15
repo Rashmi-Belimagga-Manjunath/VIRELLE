@@ -1,0 +1,22 @@
+{
+  "note": "Curated snapshot of the real Fáilte Ireland Open Data tourism catalogue (Dublin attractions & experiences), captured from the live attractions CSV. Used only while the live feed is quota-limited or unreachable, so the tourism connection never shows a dead end.",
+  "source": "VIRELLE Dublin tourism snapshot (Fáilte Ireland catalogue)",
+  "fetched_originally": "2026-08-15",
+  "summary": {
+    "county": "Dublin",
+    "total_attractions": 1259,
+    "tours_and_experiences": 333,
+    "food_and_drink_venues": 559,
+    "as_of_day": "2026-08-15",
+    "samples": [
+      "Dublin Castle",
+      "Guinness Storehouse",
+      "Trinity College Dublin",
+      "The Little Museum of Dublin",
+      "EPIC The Irish Emigration Museum",
+      "National Gallery of Ireland",
+      "St Stephen's Green",
+      "Kilmainham Gaol"
+    ]
+  }
+}
