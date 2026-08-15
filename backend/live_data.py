@@ -190,15 +190,26 @@ def _enrich_event_images(events: list[dict], max_lookups: int = 12) -> None:
                 event["image"] = img
 
 
+_EVENTS_CACHE: dict = {"key": None, "at": 0.0, "data": None}
+EVENTS_TTL = 300  # seconds - shared freshness window, keeps provider bandwidth inside the free quota
+
+
 def fetch_events(days_ahead: int = 14, county: str | None = "Dublin") -> dict:
     """Fetch live events from the Fáilte Ireland open data events API.
 
-    The upstream feed is always queried live at the moment of use. When it
-    is unavailable or rate-limited, a curated snapshot of real Dublin events
-    is served instead so the chat never dead-ends. Every event is paired with
-    a real photo (the feed's own image when present, otherwise a live Wikimedia
-    Commons photo of the event or its venue).
+    The upstream feed is queried live at the moment of use, then reused for a
+    short freshness window (EVENTS_TTL) so the provider's daily bandwidth quota
+    is never exhausted by monitor polling. When it is unavailable or
+    rate-limited, a curated snapshot of real Dublin events is served instead so
+    the chat never dead-ends. Every event is paired with a real photo (the
+    feed's own image when present, otherwise a live Wikimedia Commons photo of
+    the event or its venue).
     """
+    key = (days_ahead, county)
+    now = time.monotonic()
+    if _EVENTS_CACHE["key"] == key and _EVENTS_CACHE["data"] and (now - _EVENTS_CACHE["at"]) < EVENTS_TTL:
+        return dict(_EVENTS_CACHE["data"])
+
     fetched_at = dt.datetime.now().isoformat(timespec="seconds")
     status = "connected"
     error = None
@@ -275,7 +286,11 @@ def fetch_events(days_ahead: int = 14, county: str | None = "Dublin") -> dict:
             payload["source_url"] = ""
     else:
         _enrich_event_images(events)
-    return payload
+
+    _EVENTS_CACHE["key"] = key
+    _EVENTS_CACHE["at"] = now
+    _EVENTS_CACHE["data"] = payload
+    return dict(payload)
 
 
 def _to_float(value):

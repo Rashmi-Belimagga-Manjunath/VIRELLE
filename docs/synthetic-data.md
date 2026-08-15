@@ -12,7 +12,7 @@ data is real, fetched live from the internet at the moment of use.**
 |------|-------|--------|
 | Dublin events this weekend | ✅ **Real, live** | Fáilte Ireland Open Data API |
 | Dublin weather forecast | ✅ **Real, live** | Open-Meteo API |
-| Dublin destination interest | ✅ **Real, live** | Wikimedia pageviews API |
+| Dublin destination interest | ✅ **Real, live** | Fáilte Ireland tourism catalogue |
 | The Virelle Dublin as a hotel | ❌ **Fictional** | Defined in `seed.py` |
 | Room inventory / occupancy | ❌ **Synthetic** | Generated in `seed.py` |
 | Facility utilisation | ❌ **Synthetic** | Generated in `seed.py` |
@@ -32,8 +32,16 @@ and are shown as live connections in the UI:
   listing** from that live feed.
 - **Weather** — `Open-Meteo` forecast for the hotel's coordinates
   (53.3498, −6.2603), WMO codes mapped to human labels.
-- **Destination interest** — `Wikimedia` per-article daily pageviews for the
-  "Dublin" Wikipedia article, trended week-on-week.
+- **Destination interest** — `Fáilte Ireland Open Data` tourism catalogue
+  (attractions & experiences CSV), filtered to Dublin county — 1,259 registered
+  attractions, 333 tours/experiences, 559 food & drink venues.
+
+The large Fáilte Ireland catalogues are reused for short freshness windows
+(events 5 min, tourism 15 min) so the free-tier bandwidth quota is never
+exhausted; weather is fetched live every time, and every agent tool call forces
+a fresh fetch. When a feed is quota-limited, an honestly-labelled curated
+snapshot of the real listings is served (`curated_events.json`,
+`curated_tourism.json`) so the connection monitor never dead-ends.
 
 Nothing about the destination is invented. If the feed returns nothing, the
 agent is told live data is unavailable.

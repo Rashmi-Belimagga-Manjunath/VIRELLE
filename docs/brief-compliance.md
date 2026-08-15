@@ -11,10 +11,16 @@ the live queries, and run the pipeline.
 - Live queries (network calls at runtime, nothing hardcoded):
   - `backend/live_data.py` — `fetch_events()` calls the live Fáilte Ireland
     events API; `fetch_weather()` calls the live Open-Meteo API;
-    `fetch_destination_interest()` calls the live Wikimedia pageviews API.
+    `fetch_destination_interest()` calls the live Fáilte Ireland tourism
+    catalogue (attractions & experiences).
   - These are plain HTTP requests made **every time** an agent calls the tools
     `query_live_events`, `query_live_weather`, `query_destination_interest`
-    (`backend/toolkit.py`).
+    (`backend/toolkit.py`). To respect the providers' free-tier bandwidth
+    quotas (they return HTTP 429/403 if re-downloaded on every monitor poll),
+    the large catalogues are reused for short freshness windows (events 5 min,
+    tourism 15 min); every other live query (and every agent tool call, which
+    forces a fresh fetch) hits the network at the moment of use. Each payload
+    carries the real `fetched_at` time so the UI never misrepresents age.
 - Real MCP server: `backend/mcp_server.py` is a Model Context Protocol server
   exposing 12 hotel tools; `backend/mcp_client.py` connects to it over stdio.
   Every call is recorded with a timestamp (`fetched_at`) as evidence.
