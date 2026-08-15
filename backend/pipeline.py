@@ -8,6 +8,7 @@ evidence. Progress is streamed to subscribers over asyncio queues.
 import asyncio
 import datetime as dt
 import json
+import re
 import time
 import uuid
 
@@ -246,11 +247,40 @@ def _build_agent_prompt(agent_id: str, mission: str, prior: dict | None) -> str:
     )
 
 
+def _worst_unsold_night(op: Operation) -> str | None:
+    """The future night with the most unsold rooms, from the operation's own
+    inventory evidence. The created experience is pinned to this night so the
+    product always matches the opportunity the organisation identified."""
+    best = None
+    for e in op.evidence:
+        if e.get("tool") != "get_available_inventory":
+            continue
+        for m in re.finditer(r"(\d{4}-\d{2}-\d{2}):\s*(\d+) unsold", e.get("summary") or ""):
+            date, n = m.group(1), int(m.group(2))
+            if date <= dt.date.today().isoformat():
+                continue
+            if best is None or n > best[1]:
+                best = (date, n)
+    return best[0] if best else None
+
+
+def _pin_stay_date(op: Operation) -> None:
+    """Align the product's stay date with the under-sold night found."""
+    if not op.product:
+        return
+    night = _worst_unsold_night(op)
+    if not night:
+        return
+    op.product["stay_date"] = night
+    bc = op.product.get("booking_config")
+    if bc:
+        bc["date"] = night
+
+
 async def run_operation(op: Operation) -> None:
     try:
         await op.log_line(f"🟢 OPERATION STARTED — {op.mission}")
         await op.publish_connection_status()
-
         prior = None
         for agent_id in agents.AGENT_ORDER:
             agent = agents.AGENTS[agent_id]
@@ -268,6 +298,7 @@ async def run_operation(op: Operation) -> None:
                 await op.log_line(f"✖ {agent['name']} failed: {type(exc).__name__}: {exc}")
                 raise
 
+        _pin_stay_date(op)
         op.status = "complete"
         op.finished_at = dt.datetime.now().isoformat(timespec="seconds")
         await op.log_line("🏁 OPERATION COMPLETE — final business decision delivered.")
