@@ -8,6 +8,7 @@ evidence. Progress is streamed to subscribers over asyncio queues.
 import asyncio
 import datetime as dt
 import json
+import os
 import re
 import time
 import uuid
@@ -17,6 +18,11 @@ import config
 import llm
 import live_data
 from toolkit import Toolkit, HOTEL_TOOL_NAMES, LIVE_TOOL_NAMES
+
+OPERATIONS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "operations")
+SEED_OPERATIONS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "seed_operations")
+for _dir in (OPERATIONS_DIR, SEED_OPERATIONS_DIR):
+    os.makedirs(_dir, exist_ok=True)
 
 OPERATION_GOAL = (
     "Increase weekend revenue at The Virelle Dublin by converting unsold inventory "
@@ -109,6 +115,38 @@ class Operation:
     async def add_evidence(self, item: dict):
         self.evidence.append(item)
         await self.emit({"type": "evidence", "evidence": item})
+
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "mission": self.mission,
+            "created_at": self.created_at,
+            "finished_at": self.finished_at,
+            "status": self.status,
+            "error": self.error,
+            "agents": self.agents,
+            "log": self.log,
+            "evidence": self.evidence,
+            "product": self.product,
+            "campaign": self.campaign,
+            "decision": self.decision,
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "Operation":
+        op = cls(data.get("mission") or OPERATION_GOAL)
+        op.id = data.get("id") or op.id
+        op.created_at = data.get("created_at") or op.created_at
+        op.finished_at = data.get("finished_at")
+        op.status = data.get("status", "complete")
+        op.error = data.get("error")
+        op.agents = data.get("agents") or op.agents
+        op.log = data.get("log") or []
+        op.evidence = data.get("evidence") or []
+        op.product = data.get("product")
+        op.campaign = data.get("campaign")
+        op.decision = data.get("decision")
+        return op
 
     async def publish_connection_status(self):
         state = {c["name"]: c for c in CONNECTIONS.get()}
@@ -311,6 +349,41 @@ async def run_operation(op: Operation) -> None:
         op.finished_at = dt.datetime.now().isoformat(timespec="seconds")
         await op.log_line(f"✖ OPERATION FAILED — {op.error}")
         await op.emit({"type": "operation", "status": "failed", "error": op.error})
+    save_operation(op)
+
+
+def save_operation(op: Operation) -> None:
+    """Persist a finished operation to disk (warm-restart survival)."""
+    try:
+        with open(os.path.join(OPERATIONS_DIR, f"{op.id}.json"), "w", encoding="utf-8") as fh:
+            json.dump(op.to_dict(), fh, ensure_ascii=False, indent=2)
+    except Exception:
+        pass
+
+
+def load_operations() -> dict[str, "Operation"]:
+    """Load completed operations from disk: committed seeds, then runtime files.
+
+    Seeded examples live in the repo so every cold start (deploy / spin-down)
+    still has real, complete operations for every tab and the chat concierge.
+    """
+    loaded: dict[str, Operation] = {}
+    for folder in (SEED_OPERATIONS_DIR, OPERATIONS_DIR):
+        try:
+            for name in sorted(os.listdir(folder)):
+                if not name.endswith(".json"):
+                    continue
+                try:
+                    with open(os.path.join(folder, name), encoding="utf-8") as fh:
+                        data = json.load(fh)
+                    op = Operation.from_dict(data)
+                    if op.status in ("complete", "failed"):
+                        loaded[op.id] = op
+                except Exception:
+                    continue
+        except Exception:
+            continue
+    return loaded
 
 
 async def _run_single_agent(op: Operation, agent_id: str, agent: dict, prior: dict | None) -> None:

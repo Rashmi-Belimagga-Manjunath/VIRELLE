@@ -30,6 +30,8 @@ FRONTEND_DIST = Path(__file__).resolve().parent.parent / "frontend" / "dist"
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     seed_database()
+    for op_id, op in pipeline.load_operations().items():
+        OPS[op_id] = op
     mcp = default_mcp_client()
     await mcp.connect()
     pipeline.init_pipeline(mcp)
