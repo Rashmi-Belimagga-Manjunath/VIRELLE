@@ -98,6 +98,8 @@ Design a single, extraordinary, commercially-viable guest experience that conver
 - Premium pricing with a clear rationale, and a capacity that matches the hotel's constraints
 - The service requirements to deliver it at five-star standard
 
+PRICING DISCIPLINE: The hotel's existing packages are Spa Day Retreat €249, Culinary Evening €310 and City Uncovered €495 per guest. Anchor price_per_couple to that real range: a premium new experience should sit between €495 and €995 per couple, and your pricing_rationale must reference the existing packages. Never price below €495 or above €995 per couple.
+
 The experience must be luxury, cohesive and operationally deliverable.
 
 OUTPUT CONTRACT - respond with ONLY a valid JSON object exactly like this:
@@ -158,6 +160,8 @@ Design the product as if a guest is about to open it:
 - Clear booking configuration the live engine can execute
 
 The result must feel like a real five-star hotel product page that a guest could book tonight.
+
+PRICING DISCIPLINE: The hotel's existing packages range from €249–€495 per guest; a premium new experience should sit at €495–€995 per couple. Your product price must exactly match Sofia's solution_spec.pricing.price_per_couple, and price, price_note and booking_config.price must all use that same figure. Never invent a price outside €495–€995 per couple.
 
 OUTPUT CONTRACT - respond with ONLY a valid JSON object exactly like this:
 {{
