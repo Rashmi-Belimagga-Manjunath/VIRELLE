@@ -241,22 +241,77 @@ async def _run_operation_silent(sid: str, mission: str) -> None:
     yield {"type": "operation_done", "operation_id": op.id}
 
 
+def _evidence(op: Operation, tool: str) -> str | None:
+    return next((e.get("summary") for e in op.evidence if e.get("tool") == tool), None)
+
+
+def _worst_unsold(summary: str | None):
+    best = None
+    for m in re.finditer(r"(\d{4}-\d{2}-\d{2}):\s*(\d+) unsold", summary or ""):
+        date, n = m.group(1), int(m.group(2))
+        if best is None or n > best[1]:
+            best = (date, n)
+    return best
+
+
+def _first_event_name(summary: str | None) -> str | None:
+    for line in (summary or "").splitlines():
+        if line.startswith("- "):
+            parts = line.split(" | ")
+            if len(parts) >= 2:
+                return parts[1].strip()
+    return None
+
+
+def _evidence_hook(op: Operation) -> list[str]:
+    """Two or three lines of real evidence that justify the recommendation."""
+    hook: list[str] = []
+    worst = _worst_unsold(_evidence(op, "get_available_inventory"))
+    if worst:
+        date, n = worst
+        wd = dt.datetime.strptime(date, "%Y-%m-%d").strftime("%A")
+        hook.append(f"Your softest night is {wd} {date}, with {n} rooms still unsold.")
+    event = _first_event_name(_evidence(op, "query_live_events"))
+    if event:
+        hook.append(f"There's a city event — {event} — that can pull in couples that week.")
+    if not hook:
+        hist = _evidence(op, "get_historical_performance") or ""
+        m = re.search(r"occupancy (\d+)", hist)
+        if m:
+            hook.append(f"Occupancy is running at {m.group(1)}% — clear headroom to convert.")
+    if not hook:
+        inv = _evidence(op, "get_available_inventory") or ""
+        hook.append("Weekday and weekend demand is uneven, so a targeted experience can lift revenue without discounting.")
+    return hook
+
+
 def _customer_answer(op: Operation) -> str:
     product = op.product or {}
     bc = product.get("booking_config") or {}
     name = product.get("experience_name") or "a new experience"
     stay_date = bc.get("date") or product.get("stay_date")
     price = bc.get("price") or product.get("price")
-    verdict = (op.decision or {}).get("verdict") if op.decision else None
+    decision = op.decision or {}
+    verdict = decision.get("verdict")
 
-    lines = ["Wonderful — we've arranged something for you:"]
+    opener = "Here's what I found — and the opportunity I'd pursue."
+    if re.search(r"create|launch|build|design|make|new experience", op.mission, re.I):
+        opener = "We've designed something for you."
+
+    lines = [opener]
+    lines.extend(_evidence_hook(op))
+    lines.append("")
     lines.append(f"• {name}")
     if stay_date:
         lines.append(f"• {stay_date}")
     if price:
-        lines.append(f"• €{price} per guest")
+        lines.append(f"• €{price} per couple")
     if verdict:
         lines.append(f"• {verdict}")
+    summary = (decision.get("decision_summary") or "").strip()
+    if summary:
+        lines.append("")
+        lines.append(summary[:320])
     lines.append("")
-    lines.append("Shall I reserve it for you?")
+    lines.append("Want me to take it live and open bookings, or shall I walk you through the full plan first?")
     return "\n".join(lines)
