@@ -1,9 +1,13 @@
 """Live external data clients.
 
-Everything here is fetched over the network at the moment of use - nothing is
-cached in code, hardcoded or copy-pasted. Every client returns structured data
-plus the exact time it was retrieved and the source URL, so the UI can show
-what was queried, when, and from where.
+Events and weather are fetched over the network at the moment of use -
+nothing is cached in code, hardcoded or copy-pasted. The one exception is the
+Fáilte Ireland tourism catalogue: it is a large, slowly-changing registry that
+repeatedly returns HTTP 429 (too many requests) if re-downloaded on every
+monitor tick, so it is reused for 15 minutes between real fetches (see
+`fetch_destination_interest`). Every client returns structured data plus the
+exact time it was retrieved and the source URL, so the UI can show what was
+queried, when, and from where.
 """
 import csv
 import datetime as dt
@@ -343,12 +347,30 @@ def fetch_weather(lat: float = None, lon: float = None, days: int = 7) -> dict:
 # Tourism - Fáilte Ireland Open Data (Dublin attractions & experiences)
 # --------------------------------------------------------------------------
 
-def fetch_destination_interest() -> dict:
+_DESTINATION_CACHE: dict = {"at": 0.0, "data": None}
+DESTINATION_TTL = 15 * 60  # seconds - static catalogue; guards against upstream rate limits
+
+
+def fetch_destination_interest(force: bool = False) -> dict:
     """Live Fáilte Ireland tourism catalogue for Dublin (attractions & experiences).
 
-    The upstream CSV is always fetched live at the moment of use and filtered
-    to Dublin County, giving a real picture of the destination's visitor offer.
+    The catalogue is a large, slowly-changing registry, so it is reused for
+    15 minutes between real fetches to respect the provider's rate limits (it
+    returns HTTP 429 if re-downloaded on every monitor tick). `fetched_at`
+    always reflects the moment the data was genuinely retrieved, and `force`
+    bypasses the reuse for one-off operations.
     """
+    now = time.monotonic()
+    cached = _DESTINATION_CACHE["data"]
+    if cached and not force and (now - _DESTINATION_CACHE["at"]) < DESTINATION_TTL:
+        return dict(cached)
+    data = _fetch_destination_catalogue()
+    _DESTINATION_CACHE["at"] = now
+    _DESTINATION_CACHE["data"] = data
+    return dict(data)
+
+
+def _fetch_destination_catalogue() -> dict:
     fetched_at = dt.datetime.now().isoformat(timespec="seconds")
     status = "connected"
     error = None

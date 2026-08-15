@@ -62,7 +62,7 @@ class Toolkit:
             summary = live_data.summarize_weather(payload)
             source = payload["source"]
         else:
-            payload = live_data.fetch_destination_interest()
+            payload = live_data.fetch_destination_interest(force=True)
             summary = live_data.summarize_destination(payload)
             source = payload["source"]
 
