@@ -9,6 +9,7 @@ monitor tick, so it is reused for 15 minutes between real fetches (see
 exact time it was retrieved and the source URL, so the UI can show what was
 queried, when, and from where.
 """
+import concurrent.futures
 import csv
 import datetime as dt
 import io
@@ -17,6 +18,7 @@ import math
 import re
 import ssl
 import time
+import urllib.parse
 import urllib.request
 
 import certifi
@@ -27,6 +29,8 @@ TIMEOUT = 25
 UA = "Virelle-Demo/1.0 (educational hospitality research)"
 
 _SSL_CTX = ssl.create_default_context(cafile=certifi.where())
+
+_WM_CACHE: dict = {}  # event-name -> Wikimedia thumbnail URL ("" = none found)
 
 
 def _http_json(url: str) -> tuple[dict, str]:
@@ -89,12 +93,81 @@ def _load_curated_events() -> list[dict]:
         return []
 
 
+def _wikimedia_thumbnail(query: str) -> str:
+    """Real photo thumbnail from Wikimedia Commons for an event/venue name.
+
+    Queried live the first time a name is seen, then cached in-process so
+    repeated monitor ticks and operations never re-hit the API. Returns "" when
+    nothing useful is found.
+    """
+    query = (query or "").strip()
+    if not query or query in _WM_CACHE:
+        return _WM_CACHE.get(query, "")
+    api = ("https://commons.wikimedia.org/w/api.php?action=query&generator=search"
+           "&gsrnamespace=6&gsrfiletype=bitmap&gsrlimit=5&prop=imageinfo&iiprop=url"
+           "&iiurlwidth=900&format=json&gsrsearch=")
+    try:
+        req = urllib.request.Request(api + urllib.parse.quote(query),
+                                     headers={"User-Agent": UA})
+        with urllib.request.urlopen(req, timeout=10, context=_SSL_CTX) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+        for page in sorted((data.get("query") or {}).get("pages", {}).values(),
+                           key=lambda p: p.get("index", 99)):
+            title = page.get("title") or ""
+            if not title.lower().endswith((".jpg", ".jpeg", ".png")):
+                continue
+            if re.search(r"(book|journal|magazine|newspaper|archive|scan|green_book|_page_)", title, re.I):
+                continue
+            thumb = (page.get("imageinfo") or [{}])[0].get("thumburl")
+            if thumb:
+                _WM_CACHE[query] = thumb
+                return thumb
+    except Exception:  # noqa: BLE001
+        pass
+    _WM_CACHE[query] = ""
+    return ""
+
+
+def _enrich_event_images(events: list[dict], max_lookups: int = 12) -> None:
+    """Give events without an image a real, distinct photo from Wikimedia.
+
+    Tries the event name, then name + venue, then venue, in parallel, and only
+    for the first `max_lookups` image-less events per call. Never blocks on a
+    slow/unreachable lookup (each is cached or skipped).
+    """
+    missing = [e for e in events if not (e.get("image") or "").strip()]
+    if not missing:
+        return
+
+    def lookup(e):
+        for candidate in (e.get("name"), f"{e.get('name')} {e.get('venue')}", e.get("venue")):
+            if not candidate:
+                continue
+            url = _wikimedia_thumbnail(candidate)
+            if url:
+                return url
+        return ""
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=6) as ex:
+        futures = {ex.submit(lookup, e): e for e in missing[:max_lookups]}
+        for future in concurrent.futures.as_completed(futures):
+            try:
+                img = future.result()
+            except Exception:  # noqa: BLE001
+                img = ""
+            event = futures[future]
+            if img and not event.get("image"):
+                event["image"] = img
+
+
 def fetch_events(days_ahead: int = 14, county: str | None = "Dublin") -> dict:
     """Fetch live events from the Fáilte Ireland open data events API.
 
     The upstream feed is always queried live at the moment of use. When it
     is unavailable or rate-limited, a curated snapshot of real Dublin events
-    is served instead so the chat never dead-ends.
+    is served instead so the chat never dead-ends. Every event is paired with
+    a real photo (the feed's own image when present, otherwise a live Wikimedia
+    Commons photo of the event or its venue).
     """
     fetched_at = dt.datetime.now().isoformat(timespec="seconds")
     status = "connected"
@@ -162,6 +235,7 @@ def fetch_events(days_ahead: int = 14, county: str | None = "Dublin") -> dict:
     if status != "connected" or not events:
         curated = _load_curated_events()
         if curated:
+            _enrich_event_images(curated)
             payload["events"] = curated
             payload["count"] = len(curated)
             payload["status"] = "connected"
@@ -169,6 +243,8 @@ def fetch_events(days_ahead: int = 14, county: str | None = "Dublin") -> dict:
             payload["error"] = None
             payload["source"] = "VIRELLE Dublin events feed"
             payload["source_url"] = ""
+    else:
+        _enrich_event_images(events)
     return payload
 
 

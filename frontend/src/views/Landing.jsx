@@ -228,7 +228,7 @@ export default function Landing({ navigate, onOperate }) {
 
         {/* floating live-inventory card */}
         <motion.div
-          className="float-slow absolute right-10 top-28 z-10 hidden xl:block"
+          className="float-slow absolute right-10 top-28 z-20 hidden xl:block pointer-events-none"
           style={{ x: sxCard, y: syCard }}
         >
           <div className="glass rounded-2xl px-5 py-4">
@@ -243,7 +243,7 @@ export default function Landing({ navigate, onOperate }) {
 
         {/* floating organisation card */}
         <motion.div
-          className="float-slow absolute bottom-32 left-10 z-10 hidden xl:block"
+          className="float-slow absolute left-10 top-28 z-20 hidden xl:block pointer-events-none"
           style={{ x: useTransform(sxCard, (v) => v * -1), y: useTransform(syCard, (v) => v * -1) }}
         >
           <div className="glass rounded-2xl px-5 py-4" style={{ animationDelay: "-3.5s" }}>
