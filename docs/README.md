@@ -9,7 +9,7 @@ reference for every part of the system.
 | Document | Covers |
 |----------|--------|
 | [`architecture.md`](architecture.md) | System overview, flow, technology stack, runtime topology |
-| [`agents.md`](agents.md) | The five agents — personalities, philosophies, system prompts, tool access, output contracts |
+| [`agents/`](agents/) | The five agents — one markdown per agent (personality, philosophy, responsibilities, tool access, output contract) |
 | [`pipeline.md`](pipeline.md) | The operation orchestrator, evidence model, SSE event stream, connection monitor |
 | [`mcp.md`](mcp.md) | The Hospitality Operations MCP server — all 12 tools, schemas, protocol |
 | [`hotel-data.md`](hotel-data.md) | SQLite schema, seeding logic, the business storyline |
