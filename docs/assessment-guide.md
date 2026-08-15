@@ -150,5 +150,7 @@ docs/
   synthetic-data.md  The real-vs-synthetic data ledger
   data/              Frozen snapshots of the seeded hotel database
   architecture.md    Deep architecture write-up
-  examples/          Two real operation outputs (products, campaigns, decisions)
+  examples/          Two real operation outputs (full agent timeline + evidence,
+                     products, campaigns, decisions) — also seeded at startup
+                     from backend/seed_operations/ so tabs are never empty
 ```

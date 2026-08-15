@@ -26,10 +26,11 @@ reference for every part of the system.
 ## Reference examples
 
 The `../examples/` folder contains the **actual full output** of two live
-operations run against the real LLM:
+operations run against the real LLM — each with the complete agent timeline,
+every timestamped evidence entry, the product, the campaign and the executive
+decision. The same two operations are committed as startup seeds in
+`backend/seed_operations/`, so they load automatically into the live site on
+every cold start.
 
-- [`../examples/operation-the-virelle-indulgence-escape.json`](../examples/operation-the-virelle-indulgence-escape.json)
-- [`../examples/operation-cultural-connoisseurs-weekend.json`](../examples/operation-cultural-connoisseurs-weekend.json)
-
-Each includes the product, campaign and executive decision exactly as the
-organisation delivered them.
+- [`../examples/dublins-enchanted-evening.json`](../examples/dublins-enchanted-evening.json)
+- [`../examples/virelle-night-of-elegance.json`](../examples/virelle-night-of-elegance.json)
