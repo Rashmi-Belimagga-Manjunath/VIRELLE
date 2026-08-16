@@ -336,6 +336,13 @@ async def run_operation(op: Operation) -> None:
                 await _run_single_agent(op, agent_id, agent, prior)
                 prior = {"name": agent["name"], "output": op.agents[agent_id]["output"]}
                 await op.set_agent_status(agent_id, "done")
+                if agent_id != "manager":
+                    nxt_id = agents.AGENT_ORDER[agents.AGENT_ORDER.index(agent_id) + 1]
+                    nxt = agents.AGENTS[nxt_id]
+                    await op.log_line(
+                        f"  ⇄ HANDOFF — {agent['name']}'s {_deliverable_label(prior['output'])} "
+                        f"passed to {nxt['name']} as her input."
+                    )
             except Exception as exc:  # noqa: BLE001
                 await op.set_agent_status(agent_id, "failed")
                 await op.log_line(f"✖ {agent['name']} failed: {type(exc).__name__}: {exc}")
@@ -389,6 +396,13 @@ def load_operations() -> dict[str, "Operation"]:
     return loaded
 
 
+def _deliverable_label(parsed: dict | None) -> str:
+    """Humanised name of an agent's structured output key (e.g. opportunity_brief)."""
+    if not isinstance(parsed, dict) or not parsed:
+        return "DELIVERABLE"
+    return " ".join(next(iter(parsed)).split("_")).upper()
+
+
 async def _run_single_agent(op: Operation, agent_id: str, agent: dict, prior: dict | None) -> None:
     if agent_id == "researcher":
         await _gather_researcher_data(op)
@@ -403,6 +417,7 @@ async def _run_single_agent(op: Operation, agent_id: str, agent: dict, prior: di
 
     prompt = _build_agent_prompt(agent_id, op.mission, prior)
     messages = [{"role": "user", "content": prompt}]
+    op.agents[agent_id]["prompt"] = prompt[:4000]
 
     text, final = await _chat_with_tools(op, agent, messages)
 

@@ -14,6 +14,8 @@ import {
   Server,
   FileText,
   Copy,
+  ArrowRight,
+  ClipboardList,
 } from "lucide-react";
 import { TEAM, STAGES, MISSION_SUGGESTIONS } from "../constants.jsx";
 import { GALLERY } from "../components/Images.jsx";
@@ -259,6 +261,10 @@ function Pipeline({ agents, status, running }) {
           const isDone = st === "done";
           const hasOutput = isDone && a.output;
           const open = openAgent === a.id;
+          const prev = i > 0 ? agents[i - 1] : null;
+          const prevMeta = i > 0 ? TEAM[i - 1] : null;
+          const prevReady = prev && prev.status === "done" && prev.output;
+          const prevLabel = prevMeta ? DELIVERABLE_LABELS[prevMeta.id] : null;
           return (
             <div key={a.id} className="relative flex items-start gap-5 py-3">
               {isWorking && (
@@ -301,7 +307,7 @@ function Pipeline({ agents, status, running }) {
                   </span>
                 </div>
                 {hasOutput && (
-                  <div className="mt-2.5">
+                  <div className="mt-2.5 flex flex-wrap items-center gap-2">
                     <button
                       onClick={() => setOpenAgent(open ? null : a.id)}
                       className="flex items-center gap-2 rounded-full border border-gold-500/25 bg-gold-500/5 px-3 py-1.5 font-mono text-[9px] tracking-widest text-gold-300 transition-colors hover:bg-gold-500/15"
@@ -316,6 +322,17 @@ function Pipeline({ agents, status, running }) {
                         className={`transition-transform ${open ? "rotate-180" : ""}`}
                       />
                     </button>
+                    {isDone && prevMeta && (
+                      <button
+                        onClick={() => setOpenAgent(openAgent === prevMeta.id ? null : prevMeta.id)}
+                        disabled={!prevReady}
+                        className="flex items-center gap-1.5 rounded-full border border-cream/15 bg-cream/5 px-3 py-1.5 font-mono text-[9px] tracking-widest text-cream/55 transition-colors hover:border-gold-500/40 hover:text-gold-300 disabled:opacity-40"
+                        title={`View ${prevMeta.name}'s deliverable — the input passed to ${meta.name}`}
+                      >
+                        <ArrowRight size={10} />
+                        INPUT ← {prevMeta.name.split(" ")[0].toUpperCase()}'S {prevLabel}
+                      </button>
+                    )}
                   </div>
                 )}
                 {i < (agents?.length || TEAM.length) - 1 && (
@@ -336,7 +353,14 @@ function Pipeline({ agents, status, running }) {
                       className="overflow-hidden"
                     >
                       <div className="mt-3">
-                        <BriefView agentName={meta.name} label={DELIVERABLE_LABELS[a.id]} output={a.output} />
+                        <HandoffBar
+                          agentName={meta.name}
+                          isLast={i === (agents?.length || TEAM.length) - 1}
+                          inputs={i === (agents?.length || TEAM.length) - 1 ? (agents || TEAM).slice(0, -1) : [prev].filter(Boolean)}
+                          openId={openAgent}
+                          onOpen={(id) => setOpenAgent(openAgent === id ? null : id)}
+                        />
+                        <BriefView agentName={meta.name} label={DELIVERABLE_LABELS[a.id]} output={a.output} prompt={a.prompt} />
                       </div>
                     </motion.div>
                   )}
@@ -358,8 +382,70 @@ const DELIVERABLE_LABELS = {
   manager: "EXECUTIVE DECISION",
 };
 
-function BriefView({ agentName, label, output }) {
+function HandoffBar({ agentName, isLast, inputs, openId, onOpen }) {
+  if (isLast) {
+    return (
+      <div className="mb-2 rounded-lg border border-gold-500/20 bg-gold-500/5 px-3 py-2.5">
+        <p className="flex items-center gap-1.5 font-mono text-[9px] tracking-widest text-gold-300/80">
+          <ClipboardList size={11} />
+          HANDOFF — {agentName.split(" ")[0].toUpperCase()} REVIEWED THE COMPLETE ORGANISATION OUTPUT
+        </p>
+        <div className="mt-1.5 flex flex-wrap gap-2">
+          {inputs.map((p) => {
+            const idx = TEAM.findIndex((t) => t.id === p.id);
+            const pm = idx >= 0 ? TEAM[idx] : null;
+            if (!pm) return null;
+            return (
+              <button
+                key={p.id}
+                onClick={() => onOpen(p.id)}
+                disabled={p.status !== "done" || !p.output}
+                className="flex items-center gap-1.5 rounded-full border border-cream/12 bg-ink-950/70 px-3 py-1.5 font-mono text-[9px] tracking-widest text-cream/65 transition-colors hover:border-gold-500/40 hover:text-gold-300 disabled:opacity-40"
+              >
+                {pm.name.split(" ")[0].toUpperCase()}'S {DELIVERABLE_LABELS[p.id]} · VIEW
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div className="mb-2 rounded-lg border border-cream/10 bg-ink-900/50 px-3 py-2.5">
+      <p className="flex items-center gap-1.5 font-mono text-[9px] tracking-widest text-cream/45">
+        <ArrowRight size={10} className="text-gold-400" />
+        HANDOFF — INPUT RECEIVED BY {agentName.split(" ")[0].toUpperCase()}
+      </p>
+      <div className="mt-1.5 flex flex-wrap gap-2">
+        {inputs.length === 0 ? (
+          <span className="rounded-full border border-cream/12 bg-ink-950/70 px-3 py-1.5 font-mono text-[9px] tracking-widest text-cream/65">
+            MISSION + LIVE INTELLIGENCE BRIEF (events · weather · tourism)
+          </span>
+        ) : (
+          inputs.map((p) => {
+            const idx = TEAM.findIndex((t) => t.id === p.id);
+            const pm = idx >= 0 ? TEAM[idx] : null;
+            if (!pm) return null;
+            return (
+              <button
+                key={p.id}
+                onClick={() => onOpen(p.id)}
+                disabled={p.status !== "done" || !p.output}
+                className="flex items-center gap-1.5 rounded-full border border-cream/12 bg-ink-950/70 px-3 py-1.5 font-mono text-[9px] tracking-widest text-cream/65 transition-colors hover:border-gold-500/40 hover:text-gold-300 disabled:opacity-40"
+              >
+                {pm.name.split(" ")[0].toUpperCase()}'S {DELIVERABLE_LABELS[p.id]} · VIEW
+              </button>
+            );
+          })
+        )}
+      </div>
+    </div>
+  );
+}
+
+function BriefView({ agentName, label, output, prompt }) {
   const [raw, setRaw] = useState(false);
+  const [showPrompt, setShowPrompt] = useState(false);
   const [copied, setCopied] = useState(false);
   let data = output;
   if (data && typeof data === "object" && !Array.isArray(data)) {
@@ -389,6 +475,15 @@ function BriefView({ agentName, label, output }) {
           {agentName} — {label}
         </p>
         <div className="flex items-center gap-2">
+          {prompt && (
+            <button
+              onClick={() => setShowPrompt((s) => !s)}
+              className="rounded-full border border-cream/10 px-3 py-1 font-mono text-[9px] tracking-widest text-cream/60 transition-colors hover:border-gold-500/40 hover:text-gold-300"
+            >
+              <ClipboardList size={10} className="mr-1 inline" />
+              {showPrompt ? "HIDE INPUT PROMPT" : "SHOW INPUT PROMPT"}
+            </button>
+          )}
           <button
             onClick={() => setRaw((r) => !r)}
             className="rounded-full border border-cream/10 px-3 py-1 font-mono text-[9px] tracking-widest text-cream/60 transition-colors hover:border-gold-500/40 hover:text-gold-300"
@@ -405,6 +500,11 @@ function BriefView({ agentName, label, output }) {
         </div>
       </div>
       <div className="mt-4">
+        {showPrompt && prompt && (
+          <pre className="chat-scroll mb-4 max-h-80 overflow-auto rounded-lg border border-cream/10 bg-ink-900/80 p-4 font-mono text-[10.5px] leading-relaxed text-cream/70">
+            {prompt}
+          </pre>
+        )}
         {raw ? (
           <pre className="chat-scroll max-h-80 overflow-auto rounded-lg bg-ink-900/80 p-4 font-mono text-[10.5px] leading-relaxed text-emerald-200/80">
             {JSON.stringify(output, null, 2)}
