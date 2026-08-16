@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, Sparkles, Bot, User } from "lucide-react";
+import { Send, Sparkles, Bot, User, Maximize2, Minimize2 } from "lucide-react";
 import { createChatSession, chatStream } from "../api.js";
 import { MISSION_SUGGESTIONS } from "../constants.jsx";
 import { GALLERY } from "../components/Images.jsx";
@@ -17,6 +17,7 @@ export default function Command() {
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [typing, setTyping] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   const scrollRef = useRef(null);
 
   useEffect(() => {
@@ -65,7 +66,7 @@ export default function Command() {
       />
       <div className="relative z-10 mx-auto max-w-4xl px-6 py-12">
 
-      <div className="glass relative mt-10 flex h-[70vh] flex-col overflow-hidden rounded-3xl">
+      <div className={`glass relative flex flex-col overflow-hidden ${expanded ? "fixed inset-0 z-[85] h-full w-full rounded-none" : "mt-10 h-[70vh] rounded-3xl"}`}>
         {/* chat header */}
         <div className="flex items-center justify-between border-b border-cream/8 px-6 py-4">
           <div className="flex items-center gap-3">
@@ -80,15 +81,25 @@ export default function Command() {
               </p>
             </div>
           </div>
-          <span className="hidden font-mono text-[9px] tracking-widest text-cream/30 sm:block">
-            MISSION → RESEARCH → DESIGN → BUILD → LAUNCH → DECISION
-          </span>
+          <div className="flex items-center gap-3">
+            <span className="hidden font-mono text-[9px] tracking-widest text-cream/30 sm:block">
+              MISSION → RESEARCH → DESIGN → BUILD → LAUNCH → DECISION
+            </span>
+            <button
+              onClick={() => setExpanded((e) => !e)}
+              className="grid h-8 w-8 place-items-center rounded-full border border-cream/10 text-cream/50 transition-colors hover:bg-cream/5 hover:text-cream"
+              aria-label={expanded ? "Minimise command" : "Expand command to full screen"}
+              title={expanded ? "Minimise" : "Full screen"}
+            >
+              {expanded ? <Minimize2 size={15} /> : <Maximize2 size={15} />}
+            </button>
+          </div>
         </div>
 
         {/* messages */}
         <div ref={scrollRef} className="chat-scroll flex-1 space-y-4 overflow-y-auto px-6 py-6">
           {messages.map((m, i) => (
-            <Bubble key={i} m={m} />
+            <Bubble key={i} m={m} expanded={expanded} />
           ))}
           {typing && (
             <div className="flex items-center gap-2 text-cream/40">
@@ -101,7 +112,7 @@ export default function Command() {
         </div>
 
         {/* suggestion chips */}
-        <div className="flex gap-2 overflow-x-auto px-6 pb-3">
+        <div className={`flex gap-2 overflow-x-auto pb-3 ${expanded ? "mx-auto w-full max-w-3xl px-6" : "px-6"}`}>
           {MISSION_SUGGESTIONS.map((s) => (
             <button
               key={s}
@@ -115,7 +126,7 @@ export default function Command() {
         </div>
 
         {/* input */}
-        <div className="border-t border-cream/8 px-6 py-4">
+        <div className={`border-t border-cream/8 py-4 ${expanded ? "mx-auto w-full max-w-3xl px-6" : "px-6"}`}>
           <div className="flex items-center gap-3 rounded-2xl border border-cream/10 bg-ink-950/70 px-4 py-3 focus-within:border-gold-500/40">
             <input
               value={input}
@@ -143,7 +154,8 @@ export default function Command() {
   );
 }
 
-function Bubble({ m }) {
+function Bubble({ m, expanded }) {
+  const textSize = expanded ? "text-[15px]" : "text-sm";
   if (m.role === "user") {
     return (
       <motion.div
@@ -151,7 +163,7 @@ function Bubble({ m }) {
         animate={{ opacity: 1, y: 0 }}
         className="flex justify-end"
       >
-        <div className="max-w-[80%] rounded-2xl rounded-br-md bg-gold-fade px-5 py-3 text-sm text-ink-950 shadow-glow">
+        <div className={`max-w-[80%] rounded-2xl rounded-br-md bg-gold-fade px-5 py-3 ${textSize} text-ink-950 shadow-glow`}>
           <div className="flex items-center gap-1.5 opacity-60">
             <User size={11} />
             <span className="font-mono text-[9px] tracking-widest">EXECUTIVE</span>
@@ -185,7 +197,7 @@ function Bubble({ m }) {
       className="flex justify-start"
     >
       <div
-        className={`max-w-[80%] rounded-2xl rounded-bl-md border px-5 py-3 text-sm leading-relaxed ${
+        className={`max-w-[80%] rounded-2xl rounded-bl-md border px-5 py-3 ${textSize} leading-relaxed ${
           m.error ? "border-rose-400/30 text-rose-200" : "border-cream/8 bg-ink-850 text-cream/85"
         }`}
       >

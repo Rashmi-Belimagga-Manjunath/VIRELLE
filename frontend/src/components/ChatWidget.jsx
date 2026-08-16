@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageCircle, Send, X, Sparkles, User } from "lucide-react";
+import { MessageCircle, Send, X, Sparkles, User, Maximize2, Minimize2 } from "lucide-react";
 import { createChatSession, chatStream } from "../api.js";
 
 const OPENING =
@@ -14,6 +14,7 @@ const CUSTOMER_SUGGESTIONS = [
 
 export default function ChatWidget() {
   const [open, setOpen] = useState(false);
+  const [maximized, setMaximized] = useState(false);
   const [sessionId, setSessionId] = useState(null);
   const [messages, setMessages] = useState([{ role: "assistant", text: OPENING }]);
   const [input, setInput] = useState("");
@@ -78,7 +79,7 @@ export default function ChatWidget() {
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-[60] flex flex-col items-end">
+    <div className={`fixed right-6 flex flex-col items-end ${maximized ? "inset-0 z-[85]" : "bottom-6 z-[60]"}`}>
       <AnimatePresence>
         {open && (
           <motion.div
@@ -86,7 +87,11 @@ export default function ChatWidget() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 24, scale: 0.95 }}
             transition={{ type: "spring", stiffness: 320, damping: 28 }}
-            className="mb-4 flex h-[32rem] w-[calc(100vw-3rem)] max-w-[24rem] flex-col overflow-hidden rounded-3xl border border-gold-500/20 bg-ink-900/90 shadow-2xl backdrop-blur-xl"
+            className={`flex flex-col overflow-hidden border border-gold-500/20 bg-ink-900/90 shadow-2xl backdrop-blur-xl ${
+              maximized
+                ? "fixed inset-0 z-[80] h-full w-full rounded-none"
+                : "mb-4 h-[32rem] w-[calc(100vw-3rem)] max-w-[24rem] rounded-3xl"
+            }`}
           >
             {/* header */}
             <div className="flex items-center justify-between border-b border-cream/8 bg-ink-950/60 px-5 py-3.5">
@@ -104,19 +109,29 @@ export default function ChatWidget() {
                   </p>
                 </div>
               </div>
-              <button
-                onClick={() => setOpen(false)}
-                className="grid h-8 w-8 place-items-center rounded-full text-cream/50 transition-colors hover:bg-cream/5 hover:text-cream"
-                aria-label="Close chat"
-              >
-                <X size={15} />
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setMaximized((m) => !m)}
+                  className="grid h-8 w-8 place-items-center rounded-full text-cream/50 transition-colors hover:bg-cream/5 hover:text-cream"
+                  aria-label={maximized ? "Minimise chat" : "Expand chat to full screen"}
+                  title={maximized ? "Minimise" : "Full screen"}
+                >
+                  {maximized ? <Minimize2 size={15} /> : <Maximize2 size={15} />}
+                </button>
+                <button
+                  onClick={() => setOpen(false)}
+                  className="grid h-8 w-8 place-items-center rounded-full text-cream/50 transition-colors hover:bg-cream/5 hover:text-cream"
+                  aria-label="Close chat"
+                >
+                  <X size={15} />
+                </button>
+              </div>
             </div>
 
             {/* messages */}
             <div ref={scrollRef} className="chat-scroll flex-1 space-y-3 overflow-y-auto px-4 py-4">
               {messages.map((m, i) => (
-                <WidgetBubble key={i} m={m} />
+                <WidgetBubble key={i} m={m} maximized={maximized} />
               ))}
               {typing && (
                 <div className="flex items-center gap-2 text-cream/40">
@@ -202,11 +217,12 @@ export default function ChatWidget() {
   );
 }
 
-function WidgetBubble({ m }) {
+function WidgetBubble({ m, maximized }) {
+  const bubbleWidth = maximized ? "max-w-[70%]" : "max-w-[85%]";
   if (m.role === "user") {
     return (
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="flex justify-end">
-        <div className="max-w-[85%] rounded-2xl rounded-br-md bg-gold-fade px-4 py-2.5 text-[13px] text-ink-950 shadow-glow">
+        <div className={`${bubbleWidth} rounded-2xl rounded-br-md bg-gold-fade px-4 py-2.5 shadow-glow ${maximized ? "text-[15px]" : "text-[13px]"} text-ink-950`}>
           <div className="flex items-center gap-1 opacity-60">
             <User size={10} />
             <span className="font-mono text-[8px] tracking-widest">YOU</span>
@@ -232,9 +248,9 @@ function WidgetBubble({ m }) {
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="flex justify-start">
       <div
-        className={`max-w-[85%] rounded-2xl rounded-bl-md border px-4 py-2.5 text-[13px] leading-relaxed ${
+        className={`${bubbleWidth} rounded-2xl rounded-bl-md border px-4 py-2.5 leading-relaxed ${
           m.error ? "border-rose-400/30 text-rose-200" : "border-cream/8 bg-ink-850 text-cream/85"
-        }`}
+        } ${maximized ? "text-[15px]" : "text-[13px]"}`}
       >
         <div className="flex items-center gap-1.5 text-gold-400/70">
           <Sparkles size={10} />
