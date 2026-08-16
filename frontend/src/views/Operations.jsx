@@ -12,6 +12,8 @@ import {
   CloudSun,
   Cloud,
   Server,
+  FileText,
+  Copy,
 } from "lucide-react";
 import { TEAM, STAGES, MISSION_SUGGESTIONS } from "../constants.jsx";
 import { GALLERY } from "../components/Images.jsx";
@@ -227,6 +229,7 @@ export default function Operations({ opId, navigate }) {
 function Pipeline({ agents, status, running }) {
   const doneCount = (agents || []).filter((a) => a.status === "done").length;
   const pct = agents?.length ? Math.round((doneCount / agents.length) * 100) : 0;
+  const [openAgent, setOpenAgent] = useState(null);
 
   return (
     <div className="glass relative overflow-hidden rounded-2xl p-7">
@@ -254,6 +257,8 @@ function Pipeline({ agents, status, running }) {
           const st = a.status || "waiting";
           const isWorking = st === "working";
           const isDone = st === "done";
+          const hasOutput = isDone && a.output;
+          const open = openAgent === a.id;
           return (
             <div key={a.id} className="relative flex items-start gap-5 py-3">
               {isWorking && (
@@ -295,6 +300,24 @@ function Pipeline({ agents, status, running }) {
                     {isWorking ? "● WORKING" : isDone ? "✓ COMPLETE" : "○ WAITING"}
                   </span>
                 </div>
+                {hasOutput && (
+                  <div className="mt-2.5">
+                    <button
+                      onClick={() => setOpenAgent(open ? null : a.id)}
+                      className="flex items-center gap-2 rounded-full border border-gold-500/25 bg-gold-500/5 px-3 py-1.5 font-mono text-[9px] tracking-widest text-gold-300 transition-colors hover:bg-gold-500/15"
+                    >
+                      <FileText size={11} />
+                      {open ? "HIDE " : "VIEW "}
+                      {meta.name.split(" ")[0].toUpperCase()}
+                      {"'S "}
+                      {DELIVERABLE_LABELS[a.id]}
+                      <ChevronDown
+                        size={12}
+                        className={`transition-transform ${open ? "rotate-180" : ""}`}
+                      />
+                    </button>
+                  </div>
+                )}
                 {i < (agents?.length || TEAM.length) - 1 && (
                   <div className="mt-2.5 flex items-center gap-2 text-gold-500/50">
                     <ArrowDown size={12} />
@@ -303,11 +326,149 @@ function Pipeline({ agents, status, running }) {
                     </span>
                   </div>
                 )}
+                <AnimatePresence initial={false}>
+                  {open && hasOutput && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.3 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="mt-3">
+                        <BriefView agentName={meta.name} label={DELIVERABLE_LABELS[a.id]} output={a.output} />
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             </div>
           );
         })}
       </div>
+    </div>
+  );
+}
+
+const DELIVERABLE_LABELS = {
+  researcher: "OPPORTUNITY RESEARCH BRIEF",
+  designer: "SOLUTION SPECIFICATION",
+  maker: "PRODUCT PROTOTYPE",
+  communicator: "LAUNCH CAMPAIGN",
+  manager: "EXECUTIVE DECISION",
+};
+
+function BriefView({ agentName, label, output }) {
+  const [raw, setRaw] = useState(false);
+  const [copied, setCopied] = useState(false);
+  let data = output;
+  if (data && typeof data === "object" && !Array.isArray(data)) {
+    const keys = Object.keys(data);
+    if (
+      keys.length === 1 &&
+      data[keys[0]] &&
+      typeof data[keys[0]] === "object" &&
+      !Array.isArray(data[keys[0]])
+    ) {
+      data = data[keys[0]];
+    }
+  }
+  const copy = () => {
+    navigator.clipboard
+      ?.writeText(JSON.stringify(output, null, 2))
+      .then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1500);
+      })
+      .catch(() => {});
+  };
+  return (
+    <div className="rounded-xl border border-gold-500/15 bg-ink-950/70 p-5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="font-serif text-sm text-cream">
+          {agentName} — {label}
+        </p>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setRaw((r) => !r)}
+            className="rounded-full border border-cream/10 px-3 py-1 font-mono text-[9px] tracking-widest text-cream/60 transition-colors hover:border-gold-500/40 hover:text-gold-300"
+          >
+            {raw ? "SHOW FIELDS" : "SHOW RAW JSON"}
+          </button>
+          <button
+            onClick={copy}
+            className="flex items-center gap-1.5 rounded-full border border-cream/10 px-3 py-1 font-mono text-[9px] tracking-widest text-cream/60 transition-colors hover:border-gold-500/40 hover:text-gold-300"
+          >
+            <Copy size={10} />
+            {copied ? "COPIED" : "COPY JSON"}
+          </button>
+        </div>
+      </div>
+      <div className="mt-4">
+        {raw ? (
+          <pre className="chat-scroll max-h-80 overflow-auto rounded-lg bg-ink-900/80 p-4 font-mono text-[10.5px] leading-relaxed text-emerald-200/80">
+            {JSON.stringify(output, null, 2)}
+          </pre>
+        ) : (
+          <Fields data={data} />
+        )}
+      </div>
+    </div>
+  );
+}
+
+function Fields({ data }) {
+  if (!data || typeof data !== "object" || Array.isArray(data)) {
+    return data != null ? <p className="text-sm text-cream/75">{String(data)}</p> : null;
+  }
+  return (
+    <div className="space-y-3">
+      {Object.entries(data).map(([k, v]) => (
+        <Field key={k} label={k} value={v} />
+      ))}
+    </div>
+  );
+}
+
+function Field({ label, value }) {
+  const pretty = label.replace(/_/g, " ");
+  if (Array.isArray(value)) {
+    const allStrings = value.every((x) => typeof x === "string");
+    return (
+      <div>
+        <p className="font-mono text-[9px] uppercase tracking-widest text-gold-400/80">{pretty}</p>
+        {allStrings ? (
+          <ul className="mt-1.5 list-disc space-y-1 pl-5 text-[12.5px] leading-relaxed text-cream/75">
+            {value.map((s, i) => (
+              <li key={i}>{s}</li>
+            ))}
+          </ul>
+        ) : (
+          <div className="mt-1.5 grid gap-2 md:grid-cols-2">
+            {value.map((item, i) => (
+              <div key={i} className="rounded-lg border border-cream/8 bg-ink-900/60 p-3">
+                <Fields data={item} />
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+  if (value && typeof value === "object") {
+    return (
+      <div className="rounded-lg border border-cream/8 bg-ink-900/60 p-3">
+        <p className="mb-2 font-mono text-[9px] uppercase tracking-widest text-gold-400/80">
+          {pretty}
+        </p>
+        <Fields data={value} />
+      </div>
+    );
+  }
+  return (
+    <div>
+      <p className="font-mono text-[9px] uppercase tracking-widest text-cream/40">{pretty}</p>
+      <p className="mt-0.5 text-[13px] leading-relaxed text-cream/85">{String(value)}</p>
     </div>
   );
 }
