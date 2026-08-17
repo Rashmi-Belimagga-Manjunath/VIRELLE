@@ -35,7 +35,11 @@ TOURISM_SOURCE_NAME = "Fáilte Ireland Open Data — Attractions & Experiences"
 # ---- Google Sheet (live spreadsheet data source) ----
 GOOGLE_SHEET_URL = os.getenv(
     "VIRELLE_GOOGLE_SHEET_URL",
-    "",  # Set via env var or paste your published CSV URL here
+    "",  # Single-tab mode: paste your published CSV URL here
+)
+GOOGLE_SHEET_URLS = os.getenv(
+    "VIRELLE_GOOGLE_SHEET_URLS",
+    "",  # Multi-tab mode: JSON dict of tab→URL, e.g. '{"Hotel":"...&gid=0","Rooms":"...&gid=1"}'
 )
 
 # ---- LLM configuration ----

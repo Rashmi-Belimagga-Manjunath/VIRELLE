@@ -304,11 +304,12 @@ for _agent in AGENTS.values():
 HOTEL_TOOLS = [
     {
         "name": "get_hotel_sheet",
-        "description": "Query the hotel's live Google Sheet for rooms, inventory, packages, facilities or historical data. Returns current spreadsheet data — not cached. The sheet is human-editable and changes are visible immediately.",
+        "description": "Query the hotel's live Google Sheet for rooms, inventory, packages, facilities or historical data. Pass 'tab' to select which data to query (e.g. 'Rooms', 'Inventory', 'Packages', 'Facilities', 'Historical', 'Hotel').",
         "parameters": {
             "type": "object",
             "properties": {
-                "url": {"type": "string", "description": "Published CSV URL (optional — uses default if not provided)"},
+                "tab": {"type": "string", "description": "Which tab to query: Hotel, Rooms, Inventory, Packages, Facilities, Historical"},
+                "url": {"type": "string", "description": "Override: direct published CSV URL for a specific tab"},
             },
         },
     },

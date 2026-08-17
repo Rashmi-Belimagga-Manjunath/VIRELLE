@@ -22,7 +22,7 @@ from mcp_types import (
 
 import hotel_db
 import live_sheets
-from config import GOOGLE_SHEET_URL
+from config import GOOGLE_SHEET_URL, GOOGLE_SHEET_URLS
 
 TOOLS = [
     Tool(
@@ -110,11 +110,12 @@ TOOLS = [
     ),
     Tool(
         name="get_hotel_sheet",
-        description="Query the hotel's live Google Sheet for rooms, inventory, packages, facilities or historical data. Returns the current spreadsheet data — not a cached snapshot. The sheet is human-editable and changes are visible to agents immediately.",
+        description="Query the hotel's live Google Sheet for rooms, inventory, packages, facilities or historical data. Returns current spreadsheet data — not cached. The sheet is human-editable and changes are visible immediately. Pass 'tab' to select which data tab to query (e.g. 'Rooms', 'Inventory', 'Packages', 'Facilities', 'Historical', 'Hotel').",
         input_schema={
             "type": "object",
             "properties": {
-                "url": {"type": "string", "description": "Published CSV URL of the Google Sheet tab (optional — uses default if not provided)"},
+                "tab": {"type": "string", "description": "Which tab to query: Hotel, Rooms, Inventory, Packages, Facilities, Historical"},
+                "url": {"type": "string", "description": "Override: direct published CSV URL for a specific tab"},
             },
         },
     ),
@@ -140,7 +141,11 @@ HANDLERS = {
         price=float(kw.get("price", 0)),
     ),
     "recent_bookings": lambda **kw: hotel_db.recent_bookings(limit=int(kw.get("limit", 20))),
-    "get_hotel_sheet": lambda **kw: live_sheets.fetch_hotel_sheet(kw.get("url") or GOOGLE_SHEET_URL),
+    "get_hotel_sheet": lambda **kw: live_sheets.fetch_hotel_sheet(
+        url=kw.get("url") or GOOGLE_SHEET_URL,
+        tab=kw.get("tab", ""),
+        urls_json=GOOGLE_SHEET_URLS,
+    ),
 }
 
 

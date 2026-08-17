@@ -3,14 +3,17 @@
 The Google Sheet acts as a live, human-editable data source that the agents
 can query at runtime — satisfying the "spreadsheet you control" requirement.
 
-Usage:
-    Set GOOGLE_SHEET_URL in config.py (or .env) to the published CSV URL.
-    The sheet should have tabs: Hotel, Rooms, Inventory, Packages, Facilities, Historical.
+Supports two modes:
+  1. Single URL (backwards compatible): GOOGLE_SHEET_URL = "https://...pub?output=csv"
+  2. Multi-tab: GOOGLE_SHEET_URLS = '{"Hotel":"...&gid=0","Rooms":"...&gid=1",...}'
+
+Agents pass a "tab" parameter to select which sheet tab to query.
 """
 import csv
 import io
+import json
 import urllib.request
-from datetime import date, datetime
+from datetime import datetime
 
 
 def _fetch_csv(url: str) -> list[dict]:
@@ -21,35 +24,58 @@ def _fetch_csv(url: str) -> list[dict]:
     return [dict(row) for row in reader]
 
 
-def fetch_hotel_sheet(sheet_url: str) -> dict:
-    """Fetch all tabs from a multi-sheet Google Sheets publication.
+def fetch_hotel_sheet(url: str = "", tab: str = "", urls_json: str = "") -> dict:
+    """Fetch hotel data from a published Google Sheet CSV.
 
-    The published URL format is:
-    https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid={GID}
-
-    For a single-sheet export ( gid=0 ), the URL is:
-    https://docs.google.com/spreadsheets/d/{SHEET_ID}/pub?output=csv
-
-    This function fetches the base URL and returns all available data.
-    If the sheet has multiple tabs, the user should publish each tab separately
-    and provide the URL for the tab they want queried.
+    Args:
+        url:   Direct published CSV URL (single-tab mode).
+        tab:   Tab name to query (multi-tab mode). E.g. "Rooms", "Inventory".
+        urls_json: JSON string mapping tab names to published CSV URLs.
+                   Takes precedence over `url` if both provided.
     """
+    # Resolve which URL to fetch
+    target_url = ""
+    if urls_json:
+        try:
+            tabs = json.loads(urls_json)
+        except json.JSONDecodeError:
+            tabs = {}
+        if tab and tab in tabs:
+            target_url = tabs[tab]
+        elif tabs:
+            # Return available tabs list so agent can pick
+            return {
+                "status": "needs_tab",
+                "available_tabs": list(tabs.keys()),
+                "message": f"Specify which tab to query. Available: {', '.join(tabs.keys())}",
+                "as_of": datetime.now().isoformat(timespec="seconds"),
+            }
+    if not target_url:
+        target_url = url
+
+    if not target_url:
+        return {
+            "status": "error",
+            "error": "No Google Sheet URL configured. Set VIRELLE_GOOGLE_SHEET_URL or VIRELLE_GOOGLE_SHEET_URLS in .env.",
+            "as_of": datetime.now().isoformat(timespec="seconds"),
+        }
+
     try:
-        rows = _fetch_csv(sheet_url)
+        rows = _fetch_csv(target_url)
         if not rows:
             return {"status": "empty", "rows": [], "as_of": datetime.now().isoformat(timespec="seconds")}
 
-        # Detect which tab this is based on column headers
         headers = set(rows[0].keys()) if rows else set()
-        tab = _detect_tab(headers)
+        detected_tab = _detect_tab(headers)
+        tab_label = tab or detected_tab
 
         return {
             "status": "ok",
-            "tab": tab,
+            "tab": tab_label,
             "rows": rows,
             "row_count": len(rows),
             "columns": list(rows[0].keys()) if rows else [],
-            "source": f"Google Sheet — {tab}",
+            "source": f"Google Sheet — {tab_label}",
             "as_of": datetime.now().isoformat(timespec="seconds"),
         }
     except Exception as exc:
@@ -66,7 +92,7 @@ def _detect_tab(headers: set) -> str:
     h = {col.lower().strip() for col in headers}
     if "weekday rate (eur)" in h or "weekend rate (eur)" in h:
         return "Rooms"
-    if "available (unsold)" in h or "stay date" in h and "total rooms" in h:
+    if "available (unsold)" in h or ("stay date" in h and "total rooms" in h):
         return "Inventory"
     if "cost (eur)" in h and "price (eur)" in h and "capacity" in h:
         return "Packages"
@@ -96,7 +122,7 @@ def summarize_sheet_data(data: dict) -> str:
     if tab == "Packages":
         names = [r.get("Package Name", r.get("name", "?")) for r in rows]
         prices = [r.get("Price (EUR)", r.get("price", "?")) for r in rows]
-        bits = "; ".join(f"{n} @ €{p}" for n, p in zip(names, prices))
+        bits = "; ".join(f"{nm} @ €{p}" for nm, p in zip(names, prices))
         return f"Google Sheet: {n} packages — {bits}"
     if tab == "Facilities":
         bits = "; ".join(f"{r.get('Facility Name', r.get('name', '?'))} ({r.get('Utilisation %', r.get('utilisation', '?'))}%)" for r in rows)

@@ -85,10 +85,12 @@ class Toolkit:
 
     async def _sheet(self, name, args, evidence, started) -> dict:
         url = args.get("url") or GOOGLE_SHEET_URL
-        if not url:
-            result = {"status": "error", "error": "No Google Sheet URL configured. Set VIRELLE_GOOGLE_SHEET_URL in .env."}
+        tab = args.get("tab", "")
+        from config import GOOGLE_SHEET_URLS
+        if not url and not GOOGLE_SHEET_URLS:
+            result = {"status": "error", "error": "No Google Sheet URL configured. Set VIRELLE_GOOGLE_SHEET_URL or VIRELLE_GOOGLE_SHEET_URLS in .env."}
         else:
-            result = live_sheets.fetch_hotel_sheet(url)
+            result = live_sheets.fetch_hotel_sheet(url=url, tab=tab, urls_json=GOOGLE_SHEET_URLS)
         summary = live_sheets.summarize_sheet_data(result)
         evidence.append({
             "tool": name,
