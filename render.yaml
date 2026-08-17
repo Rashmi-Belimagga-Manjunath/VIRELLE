@@ -23,3 +23,5 @@ services:
         sync: false
       - key: VIRELLE_OPENAI_MODEL
         value: gpt-4o
+      - key: VIRELLE_GOOGLE_SHEET_URL
+        value: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ0ANKCNCzqnBd6TKHXtM_9e3SAeQKaobdTsup0Nx-JJ71V_yBgaOx177_fkp8LcOlGhewAZ9qXkYKZ/pub?output=csv"
