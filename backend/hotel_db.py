@@ -204,6 +204,7 @@ def create_booking(name: str, email: str, experience: str, stay_date: str,
             (ref, stay_date, experience, "experience_package", price,
              "Dublin Afterglow Product", "confirmed", datetime.now().isoformat()),
         )
+    mark_inventory_sold(stay_date)
     return {"booking_ref": ref, "status": "confirmed", "experience": experience,
             "stay_date": stay_date, "guests": guests, "price": price,
             "confirmed_at": datetime.now().isoformat(timespec="seconds")}

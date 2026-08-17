@@ -47,7 +47,7 @@ def _revenue_for(segment: str, base: float) -> float:
 
 def seed_database() -> None:
     init_db()
-    random.seed(2026)
+    random.seed(2026 + date.today().toordinal())
     today = date.today()
 
     with _conn() as c:
@@ -120,18 +120,25 @@ def seed_database() -> None:
                 ),
             )
 
-        # Inventory for the next 21 days - Saturday is the critical under-sold night
+        # Inventory for the next 21 days — realistic variation per night
+        # Saturday is the worst-unsold night (highest available), weekdays are stronger
+        BASE_SOLD = {
+            5: 0.37,   # Saturday — lowest occupancy (most unsold)
+            6: 0.42,   # Sunday
+            4: 0.55,   # Friday — decent occupancy
+            0: 0.72,   # Monday
+            1: 0.78,   # Tuesday — strongest
+            2: 0.74,   # Wednesday
+            3: 0.65,   # Thursday
+        }
         for i in range(21):
             d = today + timedelta(days=i)
             wd = d.weekday()
-            if wd == 5:      # Saturday
-                available = 31
-            elif wd == 4:    # Friday
-                available = 24
-            elif wd == 6:    # Sunday
-                available = 38
-            elif wd in (0, 1, 2, 3):
-                available = 12 + (i % 5)
+            base_occupancy = BASE_SOLD[wd]
+            # Per-day jitter: ±8% so two Saturdays aren't identical
+            jitter = random.uniform(-0.08, 0.08)
+            occupancy = min(0.95, max(0.25, base_occupancy + jitter))
+            available = max(2, round(84 * (1 - occupancy)))
             c.execute(
                 "INSERT INTO inventory (stay_date, available, rooms_total, category, recomputed_at)"
                 " VALUES (?,?,84,'standard',?)",
