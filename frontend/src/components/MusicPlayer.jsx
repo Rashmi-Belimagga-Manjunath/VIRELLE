@@ -1,36 +1,93 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Music, Music2 } from "lucide-react";
 
 export default function MusicPlayer() {
-  const [on, setOn] = useState(false);
+  const [on, setOn] = useState(true);
   const [ready, setReady] = useState(false);
-  const audioRef = useRef(null);
+  const ctxRef = useRef(null);
+  const masterRef = useRef(null);
+  const sourceRef = useRef(null);
+  const startedRef = useRef(false);
+  const onRef = useRef(true);
+
+  const build = useCallback(async () => {
+    if (ctxRef.current) return;
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    const ctx = new Ctx();
+    const master = ctx.createGain();
+    master.gain.value = 0;
+    master.connect(ctx.destination);
+    ctxRef.current = ctx;
+    masterRef.current = master;
+
+    try {
+      const resp = await fetch("/piano-ambient.wav");
+      const arrayBuf = await resp.arrayBuffer();
+      const audioBuf = await ctx.decodeAudioData(arrayBuf);
+      const source = ctx.createBufferSource();
+      source.buffer = audioBuf;
+      source.loop = true;
+      source.connect(master);
+      source.start(0);
+      sourceRef.current = source;
+      startedRef.current = true;
+    } catch {
+      /* WAV not loaded yet */
+    }
+  }, []);
+
+  const setMaster = useCallback((level, attack) => {
+    const ctx = ctxRef.current;
+    if (!ctx || !masterRef.current) return;
+    masterRef.current.gain.cancelScheduledValues(ctx.currentTime);
+    masterRef.current.gain.setTargetAtTime(level, ctx.currentTime, attack);
+  }, []);
+
+  const startAudio = useCallback(async () => {
+    if (!ctxRef.current) await build();
+    const ctx = ctxRef.current;
+    if (!ctx) return;
+    if (ctx.state === "suspended") {
+      await ctx.resume().catch(() => {});
+    }
+    if (onRef.current) setMaster(0.22, 1.2);
+  }, [build, setMaster]);
+
+  const toggle = useCallback(async () => {
+    if (!ctxRef.current) await build();
+    const ctx = ctxRef.current;
+    if (!ctx) return;
+    const next = !onRef.current;
+    onRef.current = next;
+    setOn(next);
+    if (ctx.state === "suspended") await ctx.resume().catch(() => {});
+    setMaster(next ? 0.22 : 0, next ? 1.2 : 0.6);
+  }, [build, setMaster]);
+
+  useEffect(() => {
+    build();
+    const unlock = () => startAudio();
+    document.addEventListener("pointerdown", unlock);
+    document.addEventListener("keydown", unlock);
+    document.addEventListener("touchstart", unlock);
+    startAudio();
+    return () => {
+      document.removeEventListener("pointerdown", unlock);
+      document.removeEventListener("keydown", unlock);
+      document.removeEventListener("touchstart", unlock);
+    };
+  }, [build, startAudio]);
+
+  useEffect(() => () => {
+    sourceRef.current?.stop();
+    ctxRef.current?.close();
+  }, []);
 
   useEffect(() => {
     const t = setTimeout(() => setReady(true), 800);
     return () => clearTimeout(t);
   }, []);
-
-  useEffect(() => () => {
-    audioRef.current?.pause();
-    audioRef.current = null;
-  }, []);
-
-  const toggle = () => {
-    if (!on) {
-      if (!audioRef.current) {
-        const audio = new Audio("/piano-ambient.wav");
-        audio.loop = true;
-        audio.volume = 0.22;
-        audioRef.current = audio;
-      }
-      audioRef.current.play().catch(() => {});
-    } else {
-      audioRef.current?.pause();
-    }
-    setOn(!on);
-  };
 
   return (
     <div className="fixed bottom-6 left-6 z-[60] flex items-center gap-2">
