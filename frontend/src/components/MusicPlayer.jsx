@@ -1,182 +1,51 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Music, Music2 } from "lucide-react";
-
-const CHORDS = [
-  [220.0, 261.63, 329.63],
-  [174.61, 220.0, 261.63],
-  [196.0, 246.94, 293.66],
-  [164.81, 196.0, 246.94],
-];
-const ROOTS = [0, 1, 2, 3];
 
 export default function MusicPlayer() {
   const [on, setOn] = useState(true);
   const [ready, setReady] = useState(false);
-  const ctxRef = useRef(null);
-  const masterRef = useRef(null);
-  const voicesRef = useRef([]);
-  const chordIdxRef = useRef(0);
-  const timerRef = useRef(null);
-  const startedRef = useRef(false);
-  const onRef = useRef(true);
-
-  const build = useCallback(() => {
-    if (ctxRef.current) return;
-    const Ctx = window.AudioContext || window.webkitAudioContext;
-    const ctx = new Ctx();
-    const master = ctx.createGain();
-    master.gain.value = 0;
-    master.connect(ctx.destination);
-
-    const delay = ctx.createDelay(0.8);
-    delay.delayTime.value = 0.6;
-    const fb = ctx.createGain();
-    fb.gain.value = 0.42;
-    const wet = ctx.createGain();
-    wet.gain.value = 0.18;
-    delay.connect(fb);
-    fb.connect(delay);
-    delay.connect(wet);
-    wet.connect(master);
-    master.connect(delay);
-
-    const lp = ctx.createBiquadFilter();
-    lp.type = "lowpass";
-    lp.frequency.value = 700;
-    lp.Q.value = 0.6;
-    lp.connect(master);
-
-    ctxRef.current = ctx;
-    masterRef.current = { master, lp };
-  }, []);
-
-  const startScheduler = useCallback(() => {
-    if (startedRef.current || !ctxRef.current) return;
-    const ctx = ctxRef.current;
-    startedRef.current = true;
-
-    const playChord = () => {
-      if (!ctxRef.current) return;
-      const now = ctx.currentTime;
-      const chord = CHORDS[chordIdxRef.current % CHORDS.length];
-      chord.forEach((freq, i) => {
-        const osc = ctx.createOscillator();
-        osc.type = "sine";
-        osc.frequency.value = freq;
-        osc.detune.value = (Math.random() - 0.5) * 8;
-        const gain = ctx.createGain();
-        gain.gain.setValueAtTime(0, now);
-        gain.gain.linearRampToValueAtTime(i === 0 ? 0.07 : 0.05, now + 2.5);
-        gain.gain.linearRampToValueAtTime(0.0001, now + 9.5);
-        osc.connect(gain);
-        gain.connect(masterRef.current.lp);
-        osc.start(now);
-        osc.stop(now + 10);
-      });
-
-      const oct = ctx.createOscillator();
-      oct.type = "sine";
-      oct.frequency.value = chord[0] / 2;
-      const og = ctx.createGain();
-      og.gain.setValueAtTime(0, now);
-      og.gain.linearRampToValueAtTime(0.05, now + 4);
-      og.gain.linearRampToValueAtTime(0.0001, now + 11);
-      oct.connect(og);
-      og.connect(masterRef.current.lp);
-      oct.start(now);
-      oct.stop(now + 12);
-
-      const pad = ctx.createOscillator();
-      pad.type = "triangle";
-      pad.frequency.value = chord[0] * 1.5;
-      const pg = ctx.createGain();
-      pg.gain.value = 0.012;
-      const lfo = ctx.createOscillator();
-      lfo.frequency.value = 0.07;
-      const lfoGain = ctx.createGain();
-      lfoGain.gain.value = 0.008;
-      lfo.connect(lfoGain);
-      lfoGain.connect(pg.gain);
-      pad.connect(pg);
-      pg.connect(masterRef.current.master);
-      pad.start(now);
-      lfo.start(now);
-      pad.stop(now + 30);
-      voicesRef.current.push({ pad, lfo });
-    };
-
-    playChord();
-    chordIdxRef.current += 1;
-    timerRef.current = setInterval(() => {
-      playChord();
-      chordIdxRef.current += 1;
-    }, 12000);
-  }, []);
-
-  const setMaster = useCallback((level, attack) => {
-    const ctx = ctxRef.current;
-    if (!ctx || !masterRef.current) return;
-    masterRef.current.master.gain.cancelScheduledValues(ctx.currentTime);
-    masterRef.current.master.gain.setTargetAtTime(level, ctx.currentTime, attack);
-  }, []);
-
-  const startAudio = useCallback(() => {
-    if (!ctxRef.current) build();
-    const ctx = ctxRef.current;
-    if (!ctx) return;
-    const go = () => {
-      startScheduler();
-      if (onRef.current) setMaster(0.22, 1.2);
-    };
-    if (ctx.state === "suspended") ctx.resume().then(go).catch(() => {});
-    else go();
-  }, [build, startScheduler, setMaster]);
-
-  const toggle = useCallback(() => {
-    if (!ctxRef.current) build();
-    const ctx = ctxRef.current;
-    if (!ctx) return;
-    const next = !onRef.current;
-    onRef.current = next;
-    setOn(next);
-    const go = () => {
-      startScheduler();
-      setMaster(next ? 0.22 : 0, next ? 1.2 : 0.6);
-    };
-    if (ctx.state === "suspended") ctx.resume().then(go).catch(() => {});
-    else go();
-  }, [build, startScheduler, setMaster]);
+  const audioRef = useRef(null);
 
   useEffect(() => {
-    const unlock = () => startAudio();
-    document.addEventListener("pointerdown", unlock);
-    document.addEventListener("keydown", unlock);
-    document.addEventListener("touchstart", unlock);
-    startAudio();
-    return () => {
-      document.removeEventListener("pointerdown", unlock);
-      document.removeEventListener("keydown", unlock);
-      document.removeEventListener("touchstart", unlock);
-    };
-  }, [startAudio]);
+    const audio = new Audio("/piano-ambient.wav");
+    audio.loop = true;
+    audio.volume = 0.22;
+    audioRef.current = audio;
 
-  useEffect(() => () => {
-    if (timerRef.current) clearInterval(timerRef.current);
-    voicesRef.current.forEach(({ pad, lfo }) => {
-      try {
-        pad.stop();
-        lfo.stop();
-      } catch {
-        /* noop */
-      }
-    });
+    const start = () => {
+      if (audio.paused) audio.play().catch(() => {});
+    };
+    document.addEventListener("pointerdown", start);
+    document.addEventListener("keydown", start);
+    document.addEventListener("touchstart", start);
+    start();
+
+    return () => {
+      audio.pause();
+      audio.src = "";
+      document.removeEventListener("pointerdown", start);
+      document.removeEventListener("keydown", start);
+      document.removeEventListener("touchstart", start);
+    };
   }, []);
 
   useEffect(() => {
     const t = setTimeout(() => setReady(true), 800);
     return () => clearTimeout(t);
   }, []);
+
+  const toggle = () => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    const next = !on;
+    setOn(next);
+    if (next) {
+      audio.play().catch(() => {});
+    } else {
+      audio.pause();
+    }
+  };
 
   return (
     <div className="fixed bottom-6 left-6 z-[60] flex items-center gap-2">

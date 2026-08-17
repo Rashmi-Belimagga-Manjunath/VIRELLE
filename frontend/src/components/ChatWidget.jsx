@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageCircle, Send, X, Sparkles, User, Maximize2, Minimize2 } from "lucide-react";
 import { createChatSession, chatStream } from "../api.js";
@@ -12,6 +12,13 @@ const CUSTOMER_SUGGESTIONS = [
   "What's on in Dublin?",
 ];
 
+const THINKING_MESSAGES = [
+  "Stay calm, while we work our charm",
+  "Crafting something beautiful… please hold",
+  "Good things take time — almost there",
+  "Our elves are on it — one moment",
+];
+
 export default function ChatWidget() {
   const [open, setOpen] = useState(false);
   const [maximized, setMaximized] = useState(false);
@@ -20,6 +27,7 @@ export default function ChatWidget() {
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [typing, setTyping] = useState(false);
+  const [thinkIdx, setThinkIdx] = useState(0);
   const [nudge, setNudge] = useState(false);
   const scrollRef = useRef(null);
 
@@ -37,6 +45,12 @@ export default function ChatWidget() {
     }
     return () => clearTimeout(t);
   }, [open, sessionId]);
+
+  useEffect(() => {
+    if (!typing) return;
+    const id = setInterval(() => setThinkIdx((i) => (i + 1) % THINKING_MESSAGES.length), 3000);
+    return () => clearInterval(id);
+  }, [typing]);
 
   useEffect(() => {
     const t1 = setTimeout(() => setNudge(true), 4000);
@@ -138,7 +152,7 @@ export default function ChatWidget() {
                   <span className="h-1.5 w-1.5 rounded-full bg-gold-400 blink" />
                   <span className="h-1.5 w-1.5 rounded-full bg-gold-400 blink" style={{ animationDelay: "0.2s" }} />
                   <span className="h-1.5 w-1.5 rounded-full bg-gold-400 blink" style={{ animationDelay: "0.4s" }} />
-                  <span className="ml-1 font-mono text-[9px] tracking-widest">THINKING</span>
+                  <span className="ml-1 font-mono text-[9px] tracking-widest">{THINKING_MESSAGES[thinkIdx].toUpperCase()}</span>
                 </div>
               )}
             </div>
