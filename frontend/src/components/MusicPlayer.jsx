@@ -3,48 +3,33 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Music, Music2 } from "lucide-react";
 
 export default function MusicPlayer() {
-  const [on, setOn] = useState(true);
+  const [on, setOn] = useState(false);
   const [ready, setReady] = useState(false);
   const audioRef = useRef(null);
-
-  useEffect(() => {
-    const audio = new Audio("/piano-ambient.wav");
-    audio.loop = true;
-    audio.volume = 0.22;
-    audioRef.current = audio;
-
-    const start = () => {
-      if (audio.paused) audio.play().catch(() => {});
-    };
-    document.addEventListener("pointerdown", start);
-    document.addEventListener("keydown", start);
-    document.addEventListener("touchstart", start);
-    start();
-
-    return () => {
-      audio.pause();
-      audio.src = "";
-      document.removeEventListener("pointerdown", start);
-      document.removeEventListener("keydown", start);
-      document.removeEventListener("touchstart", start);
-    };
-  }, []);
 
   useEffect(() => {
     const t = setTimeout(() => setReady(true), 800);
     return () => clearTimeout(t);
   }, []);
 
+  useEffect(() => () => {
+    audioRef.current?.pause();
+    audioRef.current = null;
+  }, []);
+
   const toggle = () => {
-    const audio = audioRef.current;
-    if (!audio) return;
-    const next = !on;
-    setOn(next);
-    if (next) {
-      audio.play().catch(() => {});
+    if (!on) {
+      if (!audioRef.current) {
+        const audio = new Audio("/piano-ambient.wav");
+        audio.loop = true;
+        audio.volume = 0.22;
+        audioRef.current = audio;
+      }
+      audioRef.current.play().catch(() => {});
     } else {
-      audio.pause();
+      audioRef.current?.pause();
     }
+    setOn(!on);
   };
 
   return (
