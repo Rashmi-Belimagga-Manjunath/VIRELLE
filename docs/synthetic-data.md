@@ -94,6 +94,7 @@ These files are documentation, not runtime state. The live SQLite file lives at
 
 ## Where to look
 
+- Live Google Sheet (human-editable): [VIRELLE Hotel Data](https://docs.google.com/spreadsheets/d/e/2PACX-1vQ0ANKCNCzqnBd6TKHXtM_9e3SAeQKaobdTsup0Nx-JJ71V_yBgaOx177_fkp8LcOlGhewAZ9qXkYKZ/pubhtml)
 - Synthetic generator: [`../backend/seed.py`](../backend/seed.py)
 - Export script: [`../backend/export_data.py`](../backend/export_data.py)
 - Live data clients: [`../backend/live_data.py`](../backend/live_data.py)
