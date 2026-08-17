@@ -303,6 +303,16 @@ for _agent in AGENTS.values():
 
 HOTEL_TOOLS = [
     {
+        "name": "get_hotel_sheet",
+        "description": "Query the hotel's live Google Sheet for rooms, inventory, packages, facilities or historical data. Returns current spreadsheet data — not cached. The sheet is human-editable and changes are visible immediately.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "url": {"type": "string", "description": "Published CSV URL (optional — uses default if not provided)"},
+            },
+        },
+    },
+    {
         "name": "get_hotel_status",
         "description": "Return the Virelle Dublin hotel profile, location, room count and facilities.",
         "parameters": {"type": "object", "properties": {}},

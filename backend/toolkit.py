@@ -1,12 +1,14 @@
 """Tool executor for the agent pipeline.
 
 Routes tool calls to the Hospitality MCP (hotel operations) or to the live
-external data clients (events / weather / destination), and records every call
-as timestamped evidence for the operation.
+external data clients (events / weather / destination / spreadsheet), and
+records every call as timestamped evidence for the operation.
 """
 import datetime as dt
 
 import live_data
+import live_sheets
+from config import GOOGLE_SHEET_URL
 
 HOTEL_TOOL_NAMES = {
     "get_hotel_status", "get_room_availability", "get_available_inventory",
@@ -16,6 +18,8 @@ HOTEL_TOOL_NAMES = {
 }
 
 LIVE_TOOL_NAMES = {"query_live_events", "query_live_weather", "query_destination_interest"}
+
+SHEET_TOOL_NAMES = {"get_hotel_sheet"}
 
 
 class Toolkit:
@@ -30,6 +34,8 @@ class Toolkit:
             return await self._live(name, args, evidence, started)
         if name in HOTEL_TOOL_NAMES:
             return await self._hotel(name, args, evidence, started)
+        if name in SHEET_TOOL_NAMES:
+            return await self._sheet(name, args, evidence, started)
         raise ValueError(f"Unknown tool: {name}")
 
     async def _hotel(self, name, args, evidence, started) -> dict:
@@ -75,6 +81,24 @@ class Toolkit:
             "summary": summary,
         })
         return {"name": name, "args": args, "result": payload, "channel": "Live API",
+                "fetched_at": started}
+
+    async def _sheet(self, name, args, evidence, started) -> dict:
+        url = args.get("url") or GOOGLE_SHEET_URL
+        if not url:
+            result = {"status": "error", "error": "No Google Sheet URL configured. Set VIRELLE_GOOGLE_SHEET_URL in .env."}
+        else:
+            result = live_sheets.fetch_hotel_sheet(url)
+        summary = live_sheets.summarize_sheet_data(result)
+        evidence.append({
+            "tool": name,
+            "channel": "Google Sheets",
+            "source": result.get("source", "Google Sheet"),
+            "fetched_at": dt.datetime.now().isoformat(timespec="seconds"),
+            "args": {"url": url},
+            "summary": summary,
+        })
+        return {"name": name, "args": args, "result": result, "channel": "Google Sheets",
                 "fetched_at": started}
 
 

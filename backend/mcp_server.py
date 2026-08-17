@@ -21,6 +21,8 @@ from mcp_types import (
 )
 
 import hotel_db
+import live_sheets
+from config import GOOGLE_SHEET_URL
 
 TOOLS = [
     Tool(
@@ -106,6 +108,16 @@ TOOLS = [
         description="Return the most recent confirmed bookings for context.",
         input_schema={"type": "object", "properties": {"limit": {"type": "integer"}}},
     ),
+    Tool(
+        name="get_hotel_sheet",
+        description="Query the hotel's live Google Sheet for rooms, inventory, packages, facilities or historical data. Returns the current spreadsheet data — not a cached snapshot. The sheet is human-editable and changes are visible to agents immediately.",
+        input_schema={
+            "type": "object",
+            "properties": {
+                "url": {"type": "string", "description": "Published CSV URL of the Google Sheet tab (optional — uses default if not provided)"},
+            },
+        },
+    ),
 ]
 
 HANDLERS = {
@@ -128,6 +140,7 @@ HANDLERS = {
         price=float(kw.get("price", 0)),
     ),
     "recent_bookings": lambda **kw: hotel_db.recent_bookings(limit=int(kw.get("limit", 20))),
+    "get_hotel_sheet": lambda **kw: live_sheets.fetch_hotel_sheet(kw.get("url") or GOOGLE_SHEET_URL),
 }
 
 
