@@ -12,6 +12,18 @@ const CUSTOMER_SUGGESTIONS = [
   "What's on in Dublin?",
 ];
 
+function dublinGreeting() {
+  const h = new Date().toLocaleString("en-IE", { hour: "numeric", hour12: false, timeZone: "Europe/Dublin" });
+  const hour = parseInt(h, 10);
+  if (hour < 12) return "Good morning";
+  if (hour < 17) return "Good afternoon";
+  return "Good evening";
+}
+
+function openingMessage() {
+  return `${dublinGreeting()}. How can I help?\n\nTell me what you're looking for — a night out, a weekend, dinner — and I'll take care of the rest.`;
+}
+
 const THINKING_MESSAGES = [
   "Stay calm, while we work our charm",
   "Crafting something beautiful… please hold",
@@ -23,7 +35,7 @@ export default function ChatWidget() {
   const [open, setOpen] = useState(false);
   const [maximized, setMaximized] = useState(false);
   const [sessionId, setSessionId] = useState(null);
-  const [messages, setMessages] = useState([{ role: "assistant", text: OPENING }]);
+  const [messages, setMessages] = useState([{ role: "assistant", text: openingMessage() }]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [typing, setTyping] = useState(false);
