@@ -23,5 +23,5 @@ services:
         sync: false
       - key: VIRELLE_OPENAI_MODEL
         value: gpt-4o
-      - key: VIRELLE_GOOGLE_SHEET_URL
-        value: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ0ANKCNCzqnBd6TKHXtM_9e3SAeQKaobdTsup0Nx-JJ71V_yBgaOx177_fkp8LcOlGhewAZ9qXkYKZ/pub?output=csv"
+      - key: VIRELLE_GOOGLE_SHEET_URLS
+        value: '{"Hotel":"https://docs.google.com/spreadsheets/d/e/2PACX-1vQ0ANKCNCzqnBd6TKHXtM_9e3SAeQKaobdTsup0Nx-JJ71V_yBgaOx177_fkp8LcOlGhewAZ9qXkYKZ/pub?output=csv&gid=0","Rooms":"https://docs.google.com/spreadsheets/d/e/2PACX-1vQ0ANKCNCzqnBd6TKHXtM_9e3SAeQKaobdTsup0Nx-JJ71V_yBgaOx177_fkp8LcOlGhewAZ9qXkYKZ/pub?output=csv&gid=2021399226","Inventory":"https://docs.google.com/spreadsheets/d/e/2PACX-1vQ0ANKCNCzqnBd6TKHXtM_9e3SAeQKaobdTsup0Nx-JJ71V_yBgaOx177_fkp8LcOlGhewAZ9qXkYKZ/pub?output=csv&gid=409885091","Packages":"https://docs.google.com/spreadsheets/d/e/2PACX-1vQ0ANKCNCzqnBd6TKHXtM_9e3SAeQKaobdTsup0Nx-JJ71V_yBgaOx177_fkp8LcOlGhewAZ9qXkYKZ/pub?output=csv&gid=1919088254","Facilities":"https://docs.google.com/spreadsheets/d/e/2PACX-1vQ0ANKCNCzqnBd6TKHXtM_9e3SAeQKaobdTsup0Nx-JJ71V_yBgaOx177_fkp8LcOlGhewAZ9qXkYKZ/pub?output=csv&gid=1351694943"}'
